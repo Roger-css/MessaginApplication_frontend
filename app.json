@@ -1,6 +1,7 @@
 {
   "expo": {
-    "name": "MessagingApplication_frontend",
+    "backgroundColor": "#000000",
+    "name": "TextMe",
     "slug": "MessagingApplication_frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -33,7 +34,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
