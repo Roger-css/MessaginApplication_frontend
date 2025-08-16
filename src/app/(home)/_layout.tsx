@@ -6,6 +6,10 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
+        name="(Profile)/CreateProfile"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="Completed"
         options={{
           headerTitleAlign: "center",

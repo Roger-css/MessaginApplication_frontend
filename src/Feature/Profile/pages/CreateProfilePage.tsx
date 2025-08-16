@@ -1,88 +1,54 @@
-import { useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
-import { ScrollView, Text, YStack } from "tamagui";
-
-interface UserProfile {
-  name: string;
-  username: string;
-  bio: string;
-  profileImage?: string;
-}
-
-interface EditProfileScreenProps {
-  initialProfile: UserProfile;
-  onSave: (profile: UserProfile) => Promise<void>;
-  onCancel: () => void;
-}
-
-export function EditProfileScreen({
-  initialProfile,
-  onSave,
-  onCancel,
-}: EditProfileScreenProps) {
-  const [profile, setProfile] = useState<UserProfile>(initialProfile);
-  const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof UserProfile, string>>
-  >({});
-
-  const hasChanges = JSON.stringify(profile) !== JSON.stringify(initialProfile);
-
-  const validateProfile = (): boolean => {
-    const newErrors: Partial<Record<keyof UserProfile, string>> = {};
-
-    if (!profile.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!profile.username.trim()) {
-      newErrors.username = "Username is required";
-    } else if (profile.username.length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
-    } else if (!/^[a-zA-Z0-9_]+$/.test(profile.username)) {
-      newErrors.username =
-        "Username can only contain letters, numbers, and underscores";
-    }
-
-    if (profile.bio.length > 150) {
-      newErrors.bio = "Bio must be 150 characters or less";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Save } from "lucide-react-native";
+import { useForm } from "react-hook-form";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { Button, Text, YStack } from "tamagui";
+import { ProfileImagePicker } from "../components/ImagePicker";
+import { ProfileFormField } from "../components/ProfileFormField";
+import { useCreateProfile } from "../hooks/useCreateProfile";
+import { profileSchema, type ProfileFormData } from "../utils/SchemaValidation";
+export function EditProfileScreen() {
+  const initialValues: ProfileFormData = {
+    name: "",
+    username: "",
+    bio: "",
+    profileImage: undefined,
   };
-
-  const handleSave = async () => {
-    if (!validateProfile()) return;
-
-    setIsSaving(true);
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { isSubmitting, isDirty },
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: initialValues,
+  });
+  const { createProfile } = useCreateProfile();
+  const profileImage = watch("profileImage");
+  const onSubmit = async (data: ProfileFormData) => {
     try {
-      await onSave(profile);
+      await createProfile(data);
     } catch (error) {
       console.error("Failed to save profile:", error);
-    } finally {
-      setIsSaving(false);
     }
   };
-
-  const updateProfile = (field: keyof UserProfile, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+  const handleImageChange = (imageUri: string) => {
+    setValue("profileImage", imageUri, { shouldDirty: true });
   };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS ? "padding" : "height"}
     >
-      <ScrollView style={{ flex: 1, backgroundColor: "$dark1" }}>
-        <YStack gap="$4" p="$4" bg="$black2" min="100%">
+      <ScrollView
+        style={{ flex: 1, backgroundColor: "$black2", height: "100%" }}
+      >
+        <YStack gap="$4" p="$4" bg="$black2" minH="100%">
           {/* Header */}
           <YStack gap="$2" items="center" pt="$6">
-            <Text fontSize="$8" fontWeight="bold" color="$color">
+            <Text fontSize="$8" fontWeight="bold" color="white">
               Edit Profile
             </Text>
             <Text fontSize="$4" color="$black11">
@@ -92,52 +58,47 @@ export function EditProfileScreen({
 
           {/* Profile Image */}
           <ProfileImagePicker
-            currentImage={profile.profileImage}
-            onImageChange={(imageUri) =>
-              updateProfile("profileImage", imageUri)
-            }
+            currentImage={profileImage}
+            onImageChange={handleImageChange}
           />
 
           {/* Form Fields */}
-          <YStack gap="$4">
+          <YStack gap={"$3"}>
             <ProfileFormField
-              label="Display Name"
-              value={profile.name}
-              onChangeText={(text) => updateProfile("name", text)}
-              placeholder="Enter your display name"
+              name="name"
+              control={control}
+              placeholder="Enter your name"
               maxLength={50}
-              error={errors.name}
             />
 
             <ProfileFormField
-              label="Username"
-              value={profile.username}
-              onChangeText={(text) =>
-                updateProfile("username", text.toLowerCase())
-              }
+              name="username"
+              control={control}
               placeholder="Enter your username"
               maxLength={30}
-              error={errors.username}
             />
 
             <ProfileFormField
-              label="Bio"
-              value={profile.bio}
-              onChangeText={(text) => updateProfile("bio", text)}
+              name="bio"
+              control={control}
               placeholder="Tell us about yourself..."
               multiline
-              maxLength={150}
-              error={errors.bio}
+              maxLength={100}
             />
           </YStack>
-
-          {/* Actions */}
-          <ProfileActions
-            onSave={handleSave}
-            onCancel={onCancel}
-            isSaving={isSaving}
-            hasChanges={hasChanges}
-          />
+          <Button
+            icon={Save}
+            onPress={handleSubmit(onSubmit)}
+            disabled={!isDirty || isSubmitting}
+            bg="$blue9"
+            color="white"
+            opacity={isDirty ? 1 : 0.5}
+            size={"$5"}
+            width={"75%"}
+            mx={"auto"}
+          >
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
         </YStack>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -11,7 +11,7 @@ const CompletedPage = () => {
     router.replace("/");
   }
   const continueToNextPage = () => {
-    router.replace("/");
+    router.replace("/(home)/(Profile)/CreateProfile");
   };
 
   return (
