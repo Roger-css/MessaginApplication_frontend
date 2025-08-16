@@ -1,17 +1,10 @@
 import ax from "axios";
-
-const timeout = Infinity; // !Testing
-
+// value is in milliseconds so 10_000 is 10 seconds
+const timeout = 10_000; // !Testing
+const ip = "192.168.68.103";
+const port = "8084";
 export const axios = ax.create({
-  baseURL: "http://192.168.68.100:8084/api",
-  timeout,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
-export const axiosWithNoInterceptors = ax.create({
-  baseURL: "http://192.168.68.100:8084/api",
+  baseURL: `http://${ip}:${port}/api`,
   timeout,
   headers: {
     "Content-Type": "application/json",

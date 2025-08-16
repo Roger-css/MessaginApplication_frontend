@@ -1,16 +1,24 @@
+import { useMutation } from "@tanstack/react-query";
 import { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { useCallback, useEffect, useRef } from "react";
-import { axios, axiosWithNoInterceptors } from "../API/Base";
+import { axios } from "../API/Base";
 import { useAuthStore } from "../Store/authStore";
-import { RefreshTokenResponse } from "../Types/Auth";
+import { AuthResponse, RefreshTokenRequest } from "../Types/Auth";
 
 export const useAxiosAuth = () => {
   // Zustand store selectors
+  const myAxios = axios.create();
   const accessToken = useAuthStore((state) => state.accessToken);
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const setAuth = useAuthStore((state) => state.setAuth);
   const logout = useAuthStore((state) => state.logout);
-
+  const { mutateAsync } = useMutation<
+    AuthResponse,
+    AxiosError,
+    RefreshTokenRequest
+  >({
+    mutationFn: async (body) => (await axios.post("/auth/refresh", body)).data,
+  });
   // Track interceptor IDs to prevent duplicate interceptors
   const requestInterceptorId = useRef<number | null>(null);
   const responseInterceptorId = useRef<number | null>(null);
@@ -37,29 +45,33 @@ export const useAxiosAuth = () => {
   };
   const refreshAccessToken = useCallback(async (): Promise<string> => {
     try {
-      if (!refreshToken) {
+      if (!refreshToken || !accessToken) {
         throw new Error("No refresh token available");
       }
-      const response = await axiosWithNoInterceptors.post<RefreshTokenResponse>(
-        "/auth/refresh",
-        {
-          refresh_token: refreshToken,
-        }
-      );
+      const response = await mutateAsync({
+        refreshToken: refreshToken,
+        accessToken: accessToken,
+      });
+      const { refreshToken: newRefreshToken, token, result, error } = response;
 
-      const { access_token } = response.data;
-      setAuth({ accessToken, refreshToken });
-      return access_token;
+      if (result) {
+        setAuth({ access: token!, refresh: newRefreshToken! });
+        return token!;
+      }
+      if (error !== undefined) logout();
+
+      throw new Error(error?.join(", "));
     } catch (error) {
-      logout();
-      throw new Error("Failed to refresh token, error: " + error);
+      throw new Error(
+        "Failed to refresh token, error: " + JSON.stringify(error)
+      );
     }
-  }, [accessToken, logout, refreshToken, setAuth]);
+  }, [accessToken, logout, mutateAsync, refreshToken, setAuth]);
 
   // Setup interceptors
   useEffect(() => {
     // Request interceptor - Add auth header
-    requestInterceptorId.current = axios.interceptors.request.use(
+    requestInterceptorId.current = myAxios.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         if (accessToken) {
           config.headers = config.headers || {};
@@ -72,7 +84,7 @@ export const useAxiosAuth = () => {
     );
 
     // Response interceptor - Handle token refresh
-    responseInterceptorId.current = axios.interceptors.response.use(
+    responseInterceptorId.current = myAxios.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & {
@@ -93,7 +105,7 @@ export const useAxiosAuth = () => {
                 if (originalRequest.headers) {
                   originalRequest.headers.Authorization = `Bearer ${token}`;
                 }
-                return axios(originalRequest);
+                return myAxios(originalRequest);
               })
               .catch((err) => Promise.reject(err));
           }
@@ -110,7 +122,7 @@ export const useAxiosAuth = () => {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
 
-            return axios(originalRequest);
+            return myAxios(originalRequest);
           } catch (refreshError) {
             processQueue(refreshError, null);
             return Promise.reject(refreshError);
@@ -124,12 +136,12 @@ export const useAxiosAuth = () => {
 
     return () => {
       if (requestInterceptorId.current !== null) {
-        axios.interceptors.request.eject(requestInterceptorId.current);
+        myAxios.interceptors.request.eject(requestInterceptorId.current);
       }
       if (responseInterceptorId.current !== null) {
-        axios.interceptors.response.eject(responseInterceptorId.current);
+        myAxios.interceptors.response.eject(responseInterceptorId.current);
       }
     };
-  }, [accessToken, refreshAccessToken, refreshToken]);
-  return axios;
+  }, [accessToken, myAxios, refreshAccessToken, refreshToken]);
+  return myAxios;
 };

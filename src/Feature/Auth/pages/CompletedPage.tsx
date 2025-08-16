@@ -1,9 +1,17 @@
 import { Image } from "expo-image";
+import { router, useLocalSearchParams } from "expo-router";
 import { StyleSheet } from "react-native";
 import { Button, Text, XStack, YStack } from "tamagui";
 const CompletedPage = () => {
-  const Continue = () => {
-    // router.replace("")
+  const { afterAuth } = useLocalSearchParams<{
+    afterAuth?: string;
+  }>();
+
+  if (afterAuth !== "true") {
+    router.replace("/");
+  }
+  const continueToNextPage = () => {
+    router.replace("/");
   };
 
   return (
@@ -25,7 +33,12 @@ const CompletedPage = () => {
         Your phone number has been successfully verified!
       </Text>
       <XStack px={"$4"}>
-        <Button theme={"blue"} size={"$7"} width={"100%"} onPress={Continue}>
+        <Button
+          theme={"blue"}
+          size={"$7"}
+          width={"100%"}
+          onPress={continueToNextPage}
+        >
           <Text>Continue</Text>
         </Button>
       </XStack>

@@ -1,6 +1,6 @@
-import * as SecureStore from "expo-secure-store";
+import { deleteItemAsync, getItem, setItem } from "expo-secure-store";
 import { create } from "zustand";
-import { createJSONStorage, persist, StateStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 type User = {
   id: string;
@@ -14,38 +14,20 @@ type AuthState = {
   isHydrated: boolean;
 };
 type AuthActions = {
-  setAuth: (payload: {
-    accessToken: string | null;
-    refreshToken: string | null;
-  }) => void;
+  setAuth: (payload: { access: string | null; refresh: string | null }) => void;
   logout: () => Promise<void>;
 
   setHydrated: (v: boolean) => void;
 };
-
-// SecureStore adapter for Zustand's createJSONStorage
-const secureStoreAdapter: StateStorage = {
-  getItem: async (name: string) => {
-    const v = await SecureStore.getItemAsync(name);
-    return v ?? null;
-  },
-  setItem: async (name: string, value: string) => {
-    await SecureStore.setItemAsync(name, value);
-  },
-  removeItem: async (name: string) => {
-    await SecureStore.deleteItemAsync(name);
-  },
-};
-
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       accessToken: null,
       user: null,
       refreshToken: null,
 
-      setAuth: ({ accessToken, refreshToken }) => {
-        set({ accessToken, refreshToken });
+      setAuth: ({ access, refresh }) => {
+        set({ accessToken: access, refreshToken: refresh });
       },
 
       logout: async () => {
@@ -61,7 +43,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ accessToken: null, refreshToken: null, user: null });
           /**  ensure SecureStore key is removed (persist should already do this,
            **  but remove explicitly to be safe) */
-          await SecureStore.deleteItemAsync("auth-storage");
+          await deleteItemAsync("auth-storage");
         }
       },
       isHydrated: false,
@@ -69,12 +51,28 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     }),
     {
       name: "auth-storage",
-      storage: createJSONStorage(() => secureStoreAdapter),
+      storage: createJSONStorage(() => ({
+        getItem,
+        removeItem: deleteItemAsync,
+        setItem,
+      })),
+
       /**
-       * Persist only refreshToken
-       * partialize receives the entire state and returns what's persisted.
+        Persist only refreshToken
+        partialize receives the entire state and returns what's persisted.
        */
-      partialize: (state) => ({ refreshToken: state.refreshToken }),
+      partialize: (state) => ({
+        refreshToken: state.refreshToken,
+        accessToken: state.accessToken,
+      }),
+
+      /*
+        this method runs when the app is started to fetch all the stored
+        data into the zustand managed state
+      */
+      onRehydrateStorage: () => (st) => {
+        st?.setHydrated(true);
+      },
     }
   )
 );

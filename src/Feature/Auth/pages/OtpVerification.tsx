@@ -32,17 +32,18 @@ export default function OtpScreen() {
         otp: +otp,
       });
       const { refreshToken, token, result, error } = data;
-      console.log(result);
-
       if (result) {
-        setAuth({ accessToken: token!, refreshToken: refreshToken! });
-        router.replace("/(Auth)/Completed");
+        setAuth({ access: token!, refresh: refreshToken! });
+        router.replace({
+          pathname: "/(home)/Completed",
+          params: { afterAuth: "true" },
+        });
       } else {
         Toast.error(error!.join(", "));
       }
-    } catch (err) {
+    } catch {
       Toast.error(
-        `an error occurred while sending ur request please try again later, errors: ${err}`,
+        `an error occurred while sending ur request please try again later`,
         "bottom",
         <OctagonAlert />
       );

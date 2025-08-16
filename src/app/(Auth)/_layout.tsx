@@ -6,16 +6,6 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="Signup" options={{ headerShown: false }} />
       <Stack.Screen
-        name="Completed"
-        options={{
-          headerTitleAlign: "center",
-          headerStyle: {
-            backgroundColor: tamaguiConfig.themes.dark.blue2.val,
-          },
-          headerBackVisible: false,
-        }}
-      />
-      <Stack.Screen
         name="OtpVerification"
         options={{
           headerShown: true,
@@ -27,6 +17,7 @@ export default function RootLayout() {
           animation: "simple_push",
         }}
       />
+      {/* </RedirectAuthenticatedClients> */}
     </Stack>
   );
 }

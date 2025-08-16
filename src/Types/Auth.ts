@@ -15,7 +15,7 @@ export type AuthResponse = {
   refreshToken?: string | null;
 };
 
-export type RefreshTokenResponse = {
-  access_token: string;
-  refresh_token?: string;
+export type RefreshTokenRequest = {
+  accessToken: string;
+  refreshToken: string;
 };

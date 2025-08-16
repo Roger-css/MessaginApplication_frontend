@@ -19,11 +19,9 @@ const Signup = () => {
         pathname: "/(Auth)/OtpVerification",
         params: { phone, countryCode, sessionId },
       });
-    } catch (err) {
+    } catch {
       Toast.error(
-        `an error occurred while sending ur request please try again later: ${JSON.stringify(
-          err
-        )}`,
+        `an error occurred while sending ur request please try again later`,
         "bottom",
         <OctagonAlert />
       );
