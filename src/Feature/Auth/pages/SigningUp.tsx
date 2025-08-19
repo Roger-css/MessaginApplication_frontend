@@ -1,3 +1,4 @@
+import { useSessionStore } from "@/src/Store/OTPSessionStore";
 import { router } from "expo-router";
 import { OctagonAlert } from "lucide-react-native";
 import { useState } from "react";
@@ -11,13 +12,17 @@ const Signup = () => {
   const [countryCode, setCountryCode] = useState("+964");
   const [phone, setPhone] = useState("");
   const { mutateAsync } = useSendSms();
-
+  const setSession = useSessionStore((state) => state.setState);
   const onSubmit = async () => {
     try {
       const sessionId = await mutateAsync({ phoneNumber: phone, countryCode });
+      setSession({
+        countryCode: countryCode,
+        number: phone,
+        sessionId: sessionId,
+      });
       router.push({
         pathname: "/(Auth)/OtpVerification",
-        params: { phone, countryCode, sessionId },
       });
     } catch {
       Toast.error(

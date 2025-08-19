@@ -1,20 +1,21 @@
+import defaultAvatar from "@/assets/images/Domain/default_user_image.png";
 import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
 import { useState } from "react";
 import { Alert } from "react-native";
 import { Avatar, Button, XStack, YStack } from "tamagui";
-
-interface ProfileImagePickerProps {
+type ProfileImagePickerProps = {
   currentImage?: string;
   onImageChange: (imageUri: string) => void;
-}
+};
 
 export function ProfileImagePicker({
   currentImage,
   onImageChange,
 }: ProfileImagePickerProps) {
   const [isLoading, setIsLoading] = useState(false);
-
+  const img =
+    currentImage === undefined ? defaultAvatar : { uri: currentImage };
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -48,7 +49,6 @@ export function ProfileImagePicker({
       );
       return;
     }
-
     setIsLoading(true);
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
@@ -57,7 +57,6 @@ export function ProfileImagePicker({
     });
 
     if (!result.canceled) {
-      console.log(result.assets[0].uri);
       onImageChange(result.assets[0].uri);
     }
     setIsLoading(false);
@@ -73,14 +72,13 @@ export function ProfileImagePicker({
   return (
     <YStack items="center" gap="$3" bg="$black2" p="$4" rounded={"$2"}>
       <Avatar circular size="$10" bg="$black6">
-        <Avatar.Image source={{ uri: currentImage }} />
-        <Avatar.Fallback bg={"$red6"} />
+        <Avatar.Image source={img} />
       </Avatar>
       <XStack gap="$2">
         <Button
-          size="$3"
+          size="$4"
           variant="outlined"
-          icon={Camera}
+          icon={<Camera size={20} />}
           onPress={showImageOptions}
           disabled={isLoading}
           bg="$black2"

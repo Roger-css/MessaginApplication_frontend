@@ -41,7 +41,7 @@ export const ProfileFormField = ({
 
           <Input
             id={name}
-            value={value || ""}
+            value={(value as string) || ""}
             onChangeText={onChange}
             onBlur={onBlur}
             placeholder={placeholder}
@@ -52,7 +52,7 @@ export const ProfileFormField = ({
             bg="$black2"
             borderColor={error ? "$red8" : "$black10"}
             color="white"
-            fontSize="$1"
+            fontSize="$4"
             rounded="$2"
             py={"$0"}
           />
@@ -71,7 +71,7 @@ export const ProfileFormField = ({
                 text={"right"}
                 width={"30%"}
               >
-                {(value || "").length}/{maxLength}
+                {((value as string) || "").length}/{maxLength}
               </Text>
             )}
           </XStack>

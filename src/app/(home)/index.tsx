@@ -1,5 +1,4 @@
 import { useAuthStore } from "@/src/Store/authStore";
-import { Link } from "expo-router";
 import { Button, Text, YStack } from "tamagui";
 
 export default function Index() {
@@ -16,7 +15,6 @@ export default function Index() {
       <Button bg={"$red6"} onPress={logout}>
         Log Out
       </Button>
-      <Link href={"/CreateProfile"}>Edit profile</Link>
     </YStack>
   );
 }

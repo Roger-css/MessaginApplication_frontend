@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/src/Store/authStore";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSessionStore } from "@/src/Store/OTPSessionStore";
+import { router } from "expo-router";
 import { OctagonAlert } from "lucide-react-native";
 import { useState } from "react";
 import { Button, Paragraph, Text, XStack, YStack } from "tamagui";
@@ -8,12 +9,9 @@ import { OtpInput } from "../components/OtpInput";
 import { useSendOtp } from "../hooks/useSendOtp";
 
 export default function OtpScreen() {
-  const router = useRouter();
-  const { countryCode, phone, sessionId } = useLocalSearchParams<{
-    phone?: string;
-    countryCode?: string;
-    sessionId?: string;
-  }>();
+  const countryCode = useSessionStore((s) => s.countryCode);
+  const phone = useSessionStore((s) => s.number);
+  const sessionId = useSessionStore((s) => s.sessionId);
 
   const [otp, setOtp] = useState("");
   const { mutateAsync } = useSendOtp();
@@ -31,11 +29,11 @@ export default function OtpScreen() {
         sessionId: sessionId!,
         otp: +otp,
       });
-      const { refreshToken, token, result, error } = data;
+      const { token, result, error } = data;
       if (result) {
-        setAuth({ access: token!, refresh: refreshToken! });
+        setAuth({ access: token!, refresh: null });
         router.replace({
-          pathname: "/(home)/Completed",
+          pathname: "/(Auth)/Completed",
           params: { afterAuth: "true" },
         });
       } else {

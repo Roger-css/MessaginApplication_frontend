@@ -1,7 +1,7 @@
 import { tamaguiConfig } from "@/tamagui.config";
 import { Stack } from "expo-router";
 
-export default function RootLayout() {
+export default function AuthLayout() {
   return (
     <Stack>
       <Stack.Screen name="Signup" options={{ headerShown: false }} />
@@ -17,7 +17,18 @@ export default function RootLayout() {
           animation: "simple_push",
         }}
       />
-      {/* </RedirectAuthenticatedClients> */}
+      <Stack.Screen name="CreateProfile" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Completed"
+        options={{
+          headerTitleAlign: "center",
+          headerTitle: "Verified!",
+          headerStyle: {
+            backgroundColor: tamaguiConfig.themes.dark.blue2.val,
+          },
+          headerBackVisible: false,
+        }}
+      />
     </Stack>
   );
 }

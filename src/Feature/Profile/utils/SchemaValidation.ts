@@ -14,9 +14,10 @@ export const profileSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores"
     )
-    .toLowerCase(),
+    .toLowerCase()
+    .optional(),
   bio: z.string().max(150, "Bio must be 150 characters or less").optional(),
-  profileImage: z.string().optional(),
+  profileImageUri: z.string().optional(),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

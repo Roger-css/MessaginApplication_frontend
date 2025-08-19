@@ -1,1 +1,5 @@
 OTPVerification => make the input placeholder guided like telegram
+
+Prevent ghost account where you can only truly sign up after creating account details
+
+Make a better UI for editing profile picture
