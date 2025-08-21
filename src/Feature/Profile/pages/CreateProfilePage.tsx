@@ -41,10 +41,8 @@ export function EditProfileScreen() {
         return;
       }
       authenticate({ access: token!, refresh: refreshToken! });
-      router.replace("/");
-    } catch (error) {
-      console.log(JSON.stringify(error));
-
+      router.replace("/(home)/Index");
+    } catch {
       Toast.error("Make sure you are connected to the internet");
     }
   };
