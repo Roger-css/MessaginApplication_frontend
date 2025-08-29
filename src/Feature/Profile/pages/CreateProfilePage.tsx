@@ -41,7 +41,7 @@ export function EditProfileScreen() {
         return;
       }
       authenticate({ access: token!, refresh: refreshToken! });
-      router.replace("/(home)/Index");
+      router.replace("/(home)/(tabs)/Index");
     } catch {
       Toast.error("Make sure you are connected to the internet");
     }
@@ -53,7 +53,7 @@ export function EditProfileScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: $black2 }}
-      behavior={Platform.OS ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView style={{ flex: 1, height: "100%" }} bg={"$black2"}>
         <YStack gap="$4" p="$4" bg="$black2" minH="100%">

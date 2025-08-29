@@ -2,12 +2,12 @@
   "expo": {
     "backgroundColor": "#000000",
     "name": "TextMe",
-    "slug": "MessagingApplication_frontend",
+    "slug": "textme",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "messagingapplicationfrontend",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.mustafa2003.textme"
     },
     "web": {
       "bundler": "metro",
@@ -35,10 +36,20 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "supportsRTL": false,
+      "forcesRTL": false,
+      "router": {},
+      "eas": {
+        "projectId": "2d38cb1a-e2fd-49da-b1ff-3eced3e67928"
+      }
+    },
+    "owner": "mustafa2003"
   }
 }

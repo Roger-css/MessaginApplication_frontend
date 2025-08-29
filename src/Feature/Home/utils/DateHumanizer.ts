@@ -26,7 +26,9 @@ export const FormatChatDate = (date: string | Date): string => {
     // same week → show weekday (Mon, Tue...)
     return messageDate.format("dddd");
   }
-
-  // older → show date
-  return messageDate.format("MMM D, YYYY");
+  // current year → show month and day
+  if (now.diff(messageDate, "year") === 0) {
+    return messageDate.format("MMM D");
+  } // older → show date
+  return messageDate.format("MM DD, YYYY");
 };

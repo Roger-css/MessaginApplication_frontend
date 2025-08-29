@@ -1,16 +1,11 @@
-import "../../tamagui-web.css";
-
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { useColorScheme } from "react-native";
 import { TamaguiProvider } from "tamagui";
 import ToastManager from "toastify-react-native";
+import "../../tamagui-web.css";
 import { tamaguiConfig } from "../../tamagui.config";
 import { useAuthStore } from "../Store/authStore";
 SplashScreen.preventAutoHideAsync();
@@ -28,9 +23,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme!}>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
+        <ThemeProvider value={DarkTheme}>
           <Stack>
             <Stack.Protected guard={Boolean(refreshToken)}>
               <Stack.Screen name="(home)" options={{ headerShown: false }} />
