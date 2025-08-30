@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { type Control, Controller, type FieldPath } from "react-hook-form";
 import { Input, Label, Text, XStack, YStack } from "tamagui";
 import type { ProfileFormData } from "../utils/SchemaValidation";
@@ -19,6 +20,7 @@ export const ProfileFormField = ({
   multiline = false,
   maxLength,
 }: ProfileFormFieldProps) => {
+  const id = useId();
   return (
     <Controller
       name={name}
@@ -29,18 +31,13 @@ export const ProfileFormField = ({
       }) => (
         <YStack gap="$2" bg="$black2" rounded="$2">
           {label && (
-            <Label
-              htmlFor={name}
-              color="$accent1"
-              fontSize="$4"
-              fontWeight="600"
-            >
+            <Label htmlFor={id} color="$accent1" fontSize="$4" fontWeight="600">
               {label}
             </Label>
           )}
 
           <Input
-            id={name}
+            id={id}
             value={(value as string) || ""}
             onChangeText={onChange}
             onBlur={onBlur}

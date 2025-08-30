@@ -5,13 +5,13 @@ import { router } from "expo-router";
 import { Save } from "lucide-react-native";
 import { useForm } from "react-hook-form";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import { Button, ScrollView, Text, YStack } from "tamagui";
+import { Button, ScrollView, Text, View, YStack } from "tamagui";
 import { Toast } from "toastify-react-native";
 import { ProfileImagePicker } from "../components/ImagePicker";
 import { ProfileFormField } from "../components/ProfileFormField";
 import { useCreateProfile } from "../hooks/useCreateProfile";
 import { profileSchema, type ProfileFormData } from "../utils/SchemaValidation";
-export function EditProfileScreen() {
+const CreateProfilePage = () => {
   const initialValues: ProfileFormData = {
     name: "",
     username: undefined,
@@ -51,66 +51,65 @@ export function EditProfileScreen() {
   };
   const $black2 = tamaguiConfig.themes.dark.black2.val;
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: $black2 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView style={{ flex: 1, height: "100%" }} bg={"$black2"}>
-        <YStack gap="$4" p="$4" bg="$black2" minH="100%">
-          {/* Header */}
-          <YStack gap="$2" items="center" pt="$6">
-            <Text fontSize="$8" fontWeight="bold" color="white">
-              Your Profile
-            </Text>
-            <Text fontSize="$4" color="$black11">
-              Update your profile information
-            </Text>
+    <View flex={1} bg={"$black2"}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: $black2 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView style={{ flex: 1, height: "100%" }} bg={"$black2"}>
+          <YStack gap="$4" p="$4" bg="$black2" minH="100%">
+            {/* Header */}
+            <YStack gap="$2" items="center" pt="$6">
+              <Text fontSize="$8" fontWeight="bold" color="white">
+                Your Profile
+              </Text>
+              <Text fontSize="$4" color="$black11">
+                Update your profile information
+              </Text>
+            </YStack>
+            {/* Profile Image */}
+            <ProfileImagePicker
+              currentImage={profileImageUri}
+              onImageChange={handleImageChange}
+            />
+            {/* Form Fields */}
+            <YStack gap={"$3"}>
+              <ProfileFormField
+                name="name"
+                control={control}
+                placeholder="Enter your name"
+                maxLength={50}
+              />
+              <ProfileFormField
+                name="username"
+                control={control}
+                placeholder="Enter your username"
+                maxLength={30}
+              />
+              <ProfileFormField
+                name="bio"
+                control={control}
+                placeholder="Tell us about yourself..."
+                multiline
+                maxLength={100}
+              />
+            </YStack>
+            <Button
+              icon={<Save size={25} />}
+              onPress={handleSubmit(onSubmit)}
+              disabled={!isDirty || isSubmitting}
+              bg="$blue9"
+              color="white"
+              opacity={isDirty ? 1 : 0.5}
+              size={"$5"}
+              self={"flex-end"}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
           </YStack>
-
-          {/* Profile Image */}
-          <ProfileImagePicker
-            currentImage={profileImageUri}
-            onImageChange={handleImageChange}
-          />
-
-          {/* Form Fields */}
-          <YStack gap={"$3"}>
-            <ProfileFormField
-              name="name"
-              control={control}
-              placeholder="Enter your name"
-              maxLength={50}
-            />
-
-            <ProfileFormField
-              name="username"
-              control={control}
-              placeholder="Enter your username"
-              maxLength={30}
-            />
-            <ProfileFormField
-              name="bio"
-              control={control}
-              placeholder="Tell us about yourself..."
-              multiline
-              maxLength={100}
-            />
-          </YStack>
-          <Button
-            icon={<Save size={25} />}
-            onPress={handleSubmit(onSubmit)}
-            disabled={!isDirty || isSubmitting}
-            bg="$blue9"
-            color="white"
-            opacity={isDirty ? 1 : 0.5}
-            size={"$5"}
-            width={"max-content"}
-            self={"flex-end"}
-          >
-            {isSubmitting ? "Saving..." : "Save"}
-          </Button>
-        </YStack>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
-}
+};
+export default CreateProfilePage;

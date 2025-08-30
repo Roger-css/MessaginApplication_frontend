@@ -1,7 +1,7 @@
-import { EditProfileScreen } from "@/src/Feature/Profile/pages/CreateProfilePage";
+import CreateProfilePage from "@/src/Feature/Profile/pages/CreateProfilePage";
 
 const CreateProfile = () => {
-  return <EditProfileScreen />;
+  return <CreateProfilePage />;
 };
 
 export default CreateProfile;
