@@ -11,10 +11,15 @@ type AuthState = {
   accessToken: string | null;
   user: User | null;
   refreshToken: string | null;
+  expiredAt: string | null;
   isHydrated: boolean;
 };
 type AuthActions = {
-  setAuth: (payload: { access: string | null; refresh: string | null }) => void;
+  setAuth: (payload: {
+    access: string | null;
+    refresh: string | null;
+    expiredAt?: string;
+  }) => void;
   logout: () => Promise<void>;
 
   setHydrated: (v: boolean) => void;
@@ -25,9 +30,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       accessToken: null,
       user: null,
       refreshToken: null,
+      expiredAt: null,
 
-      setAuth: ({ access, refresh }) => {
-        set({ accessToken: access, refreshToken: refresh });
+      setAuth: ({ access, refresh, expiredAt }) => {
+        set({ accessToken: access, refreshToken: refresh, expiredAt });
       },
 
       logout: async () => {
@@ -64,6 +70,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       partialize: (state) => ({
         refreshToken: state.refreshToken,
         accessToken: state.accessToken,
+        expiredAt: state.expiredAt,
       }),
 
       /*

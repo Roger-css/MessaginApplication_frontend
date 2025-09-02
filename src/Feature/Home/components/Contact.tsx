@@ -42,7 +42,7 @@ const Contact = ({ props }: { props: Chat }) => {
       rippleOpacity.value = withDelay(
         50,
         withTiming(0, {
-          duration: 1050,
+          duration: 550,
           easing: Easing.out(Easing.quad),
         })
       );
@@ -65,7 +65,9 @@ const Contact = ({ props }: { props: Chat }) => {
       transform: [{ translateX: `${-50}%` }],
     };
   });
-
+  const onPress = async () => {
+    router.push("/(home)/chat/1");
+  };
   return (
     <GestureDetector gesture={composedGesture}>
       <XStack
@@ -80,7 +82,7 @@ const Contact = ({ props }: { props: Chat }) => {
         rounded={0}
         position="relative"
         overflow="hidden"
-        onPress={() => router.push("/(home)/chat/1")}
+        onPress={onPress}
       >
         {/* Ripple effect layer */}
         <Animated.View style={rippleAnimatedStyle} />

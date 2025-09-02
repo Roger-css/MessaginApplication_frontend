@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 type SessionState = {
   number: string | null;
@@ -11,8 +12,8 @@ type SessionActions = {
   clear: () => void;
 };
 
-export const useSessionStore = create<SessionState & SessionActions>(
-  (set, get) => ({
+export const useSessionStore = create<SessionState & SessionActions>()(
+  devtools((set, get) => ({
     countryCode: null,
     number: null,
     sessionId: null,
@@ -22,5 +23,5 @@ export const useSessionStore = create<SessionState & SessionActions>(
     },
 
     clear: () => set({ countryCode: null, number: null, sessionId: null }),
-  })
+  }))
 );

@@ -1,37 +1,134 @@
-import { useCallback, useEffect, useState } from "react";
-import { GiftedChat } from "react-native-gifted-chat";
-const Chating = () => {
-  const [messages, setMessages] = useState<any[]>([]);
+import React, { useCallback, useEffect, useState } from "react";
 
-  useEffect(() => {
-    setMessages([
+import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
+import { useSignalRListener } from "@/src/Hooks/useSignalRListener";
+import {
+  ReceivedMessagePayload,
+  SendMessageRequest,
+} from "@/src/Types/Message";
+import { Send } from "lucide-react-native";
+import { Keyboard } from "react-native";
+import { GiftedChat, IMessage, InputToolbar } from "react-native-gifted-chat";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button, TextArea, View } from "tamagui";
+type Props = {
+  userId: string;
+};
+const Chating = (props: Props) => {
+  const insets = useSafeAreaInsets();
+  const { invoke } = useSignalRInvoke();
+  useSignalRListener("OnMessageReceive", OnMessageReceive);
+  function OnMessageReceive(payload: ReceivedMessagePayload) {
+    const message: IMessage[] = [
       {
-        _id: 1,
-        text: "Hello developer",
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: "React Native",
-          avatar: "https://placeimg.com/140/140/any",
-        },
+        _id: payload.id,
+        createdAt: new Date(payload.createdAt),
+        text: payload.text || "",
+        user: { _id: 2 },
       },
-    ]);
-  }, []);
-
-  const onSend = useCallback((messages: any[] = []) => {
+    ];
     setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
+      GiftedChat.append(previousMessages, message)
     );
+  }
+  const [messages, setMessages] = useState<IMessage[]>([
+    {
+      _id: 1,
+      text: "Hello developer",
+      createdAt: new Date(),
+      user: { _id: 2 },
+    },
+  ]);
+
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () =>
+      setKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
+  const onSend = useCallback(
+    async (messages: IMessage[] = []) => {
+      messages[0].pending = true;
+      setMessages((previousMessages) =>
+        GiftedChat.append(previousMessages, messages)
+      );
+      const payload: SendMessageRequest = {
+        clientId: `ECE09116-2C37-402D-B${Math.trunc(
+          Math.random() * 10
+        )}${Math.trunc(Math.random() * 10)}B-91A93ACE${Math.trunc(
+          Math.random() * 10
+        )}24A`,
+      };
+      await invoke<SendMessageRequest>("sendMessage");
+    },
+    [invoke]
+  );
+
   return (
-    <GiftedChat
-      messages={messages}
-      onSend={(messages) => onSend(messages)}
-      user={{
-        _id: 1,
-      }}
-    />
+    <View
+      flex={1}
+      pb={
+        keyboardVisible
+          ? Keyboard.metrics()?.height! + insets.bottom + 5
+          : insets.bottom
+      }
+      bg={"$black2"}
+    >
+      <GiftedChat
+        messages={messages}
+        onSend={(messages) => onSend(messages)}
+        user={{
+          _id: 1,
+          name: "User",
+        }}
+        showAvatarForEveryMessage={false}
+        alwaysShowSend
+        isKeyboardInternallyHandled={false}
+        renderInputToolbar={(props) => (
+          <InputToolbar
+            {...props}
+            containerStyle={{
+              backgroundColor: "#222",
+              borderTopWidth: 0,
+            }}
+            renderSend={() => {
+              return (
+                <Button
+                  height={"$6"}
+                  bg={"$green6"}
+                  icon={<Send size={20} />}
+                />
+              );
+            }}
+          />
+        )}
+        renderComposer={(props) => (
+          <TextArea
+            placeholder="Type your message..."
+            value={props.text}
+            onChangeText={props.onTextChanged}
+            bg="$black2"
+            color="white"
+            fontSize="$4"
+            flex={1}
+            rounded="$2"
+            placeholderTextColor="#888"
+            minH={60}
+            maxH={140}
+            py={5}
+            borderWidth={2}
+          />
+        )}
+      />
+    </View>
   );
 };
 
-export default Chating;
+export default React.memo(Chating);

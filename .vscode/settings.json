@@ -4,5 +4,15 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": ["Chating", "partialize", "Pressable", "Tamagui", "Unspaced"]
+  "cSpell.words": [
+    "Chating",
+    "onreconnected",
+    "onreconnecting",
+    "partialize",
+    "Pressable",
+    "signalr",
+    "Swipeable",
+    "Tamagui",
+    "Unspaced"
+  ]
 }

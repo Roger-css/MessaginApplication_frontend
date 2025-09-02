@@ -35,12 +35,17 @@ const CreateProfilePage = () => {
   const onSubmit = async (data: ProfileFormData) => {
     try {
       const response = await createProfile(data);
-      const { result, refreshToken, error, token } = response;
+      const { result, refreshToken, error, token, expirationTime } = response;
       if (!result) {
         error?.forEach((er) => Toast.error(er));
         return;
       }
-      authenticate({ access: token!, refresh: refreshToken! });
+
+      authenticate({
+        access: token!,
+        refresh: refreshToken!,
+        expiredAt: expirationTime,
+      });
       router.replace("/(home)/(tabs)/Index");
     } catch {
       Toast.error("Make sure you are connected to the internet");

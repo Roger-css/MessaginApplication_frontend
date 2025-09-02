@@ -1,6 +1,7 @@
 import { axios } from "@/src/API/Base";
 import { useAuthStore } from "@/src/Store/authStore";
-import { useSessionStore } from "@/src/Store/OTPSessionStore";
+
+import { useSessionStore } from "@/src/Store/otpSessionStore";
 import { AuthResponse } from "@/src/Types/Auth";
 import { CreateProfileRequest } from "@/src/Types/User";
 import { useMutation } from "@tanstack/react-query";
@@ -51,14 +52,13 @@ export const useCreateProfile = () => {
         throw new Error("SessionId missing");
       }
       const body = await transformObjectToFormData(data);
-      return (
-        await axios.post("User/profile", body, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "multipart/form-data",
-          },
-        })
-      ).data;
+      const response = await axios.post("User/profile", body, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
     },
   });
   return { createProfile: mutateAsync, ...rest };

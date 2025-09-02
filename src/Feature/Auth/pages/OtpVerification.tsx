@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/src/Store/authStore";
-import { useSessionStore } from "@/src/Store/OTPSessionStore";
+import { useSessionStore } from "@/src/Store/otpSessionStore";
 import { router } from "expo-router";
 import { OctagonAlert } from "lucide-react-native";
 import { useState } from "react";

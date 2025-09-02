@@ -13,6 +13,7 @@ export type AuthResponse = {
   token?: string | null;
   error?: string[];
   refreshToken?: string | null;
+  expirationTime: string;
 };
 
 export type RefreshTokenRequest = {

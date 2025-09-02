@@ -52,10 +52,20 @@ export const useAxiosAuth = () => {
         refreshToken: refreshToken,
         accessToken: accessToken,
       });
-      const { refreshToken: newRefreshToken, token, result, error } = response;
+      const {
+        refreshToken: newRefreshToken,
+        token,
+        result,
+        error,
+        expirationTime,
+      } = response;
 
       if (result) {
-        setAuth({ access: token!, refresh: newRefreshToken! });
+        setAuth({
+          access: token!,
+          refresh: newRefreshToken!,
+          expiredAt: expirationTime,
+        });
         return token!;
       }
       if (error !== undefined) logout();
