@@ -11,14 +11,16 @@ import { Keyboard } from "react-native";
 import { GiftedChat, IMessage, InputToolbar } from "react-native-gifted-chat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, TextArea, View } from "tamagui";
+import { Toast } from "toastify-react-native";
 type Props = {
   userId: string;
 };
 const Chating = (props: Props) => {
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
-  useSignalRListener("OnMessageReceive", OnMessageReceive);
-  function OnMessageReceive(payload: ReceivedMessagePayload) {
+  useSignalRListener("OnMessageReceive", onMessageReceive);
+  useSignalRListener("OnMessageFailure", onMessageFailure);
+  function onMessageReceive(payload: ReceivedMessagePayload) {
     const message: IMessage[] = [
       {
         _id: payload.id,
@@ -30,6 +32,9 @@ const Chating = (props: Props) => {
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, message)
     );
+  }
+  function onMessageFailure(clientId: string) {
+    Toast.error("Message failed to send" + clientId);
   }
   const [messages, setMessages] = useState<IMessage[]>([
     {
@@ -59,13 +64,10 @@ const Chating = (props: Props) => {
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, messages)
       );
-      const payload: SendMessageRequest = {
-        clientId: `ECE09116-2C37-402D-B${Math.trunc(
-          Math.random() * 10
-        )}${Math.trunc(Math.random() * 10)}B-91A93ACE${Math.trunc(
-          Math.random() * 10
-        )}24A`,
-      };
+      // const payload: SendMessageRequest = {
+      //   clientId: crypto.randomUUID(),
+      //   senderId:
+      // };
       await invoke<SendMessageRequest>("sendMessage");
     },
     [invoke]
