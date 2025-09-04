@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 type User = {
-  id: string;
+  id?: string;
   name?: string;
 };
 
@@ -21,12 +21,12 @@ type AuthActions = {
     expiredAt?: string;
   }) => void;
   logout: () => Promise<void>;
-
+  setUser: (payload: Partial<User>) => void;
   setHydrated: (v: boolean) => void;
 };
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       user: null,
       refreshToken: null,
@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       setAuth: ({ access, refresh, expiredAt }) => {
         set({ accessToken: access, refreshToken: refresh, expiredAt });
       },
-
+      setUser: (payload) => set({ user: { ...get().user, ...payload } }),
       logout: async () => {
         try {
           // TODO: create the revoke or logout endpoint

@@ -7,6 +7,19 @@ export default function HomeLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Search"
+          options={{
+            headerTitle: "",
+            animation: "fade_from_bottom",
+            animationDuration: 100,
+            headerSearchBarOptions: {
+              onSearchButtonPress: () => {
+                console.log("search");
+              },
+            },
+          }}
+        />
       </Stack>
     </SignalRWrapper>
   );

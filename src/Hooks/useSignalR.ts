@@ -14,7 +14,6 @@ interface UseSignalRReturn {
 export const useSignalR = (): UseSignalRReturn => {
   const { connection, connectionState, isConnected, error, clearError } =
     useSignalRStore();
-  console.log("connection state:", JSON.stringify(connectionState));
 
   useEffect(() => {
     const initializeConnection = async (): Promise<void> => {
@@ -41,7 +40,7 @@ export const useSignalR = (): UseSignalRReturn => {
       await SignalRService.createConnection();
       await SignalRService.startConnection();
     } catch (error) {
-      console.error("Failed to reconnect:", error);
+      console.log("Failed to reconnect:", error);
     }
   };
 

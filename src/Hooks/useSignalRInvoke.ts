@@ -5,17 +5,22 @@ export const useSignalRInvoke = () => {
   const { connection, isConnected, setError } = useSignalRStore();
 
   const invoke = useCallback(
-    async <T>(
+    async <T, R>(
       methodName: string,
       argument?: T,
       ...additionalArgs: any[]
-    ): Promise<void> => {
+    ) => {
       if (!isConnected || !connection) {
         throw new Error("SignalR connection is not established");
       }
-
       try {
-        await connection.invoke(methodName, argument, ...additionalArgs);
+        if (argument)
+          return await connection.invoke<R>(
+            methodName,
+            argument,
+            ...additionalArgs
+          );
+        return await connection.invoke(methodName);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";

@@ -2,7 +2,6 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
 import { TamaguiProvider } from "tamagui";
 import ToastManager from "toastify-react-native";
 import "../../tamagui-web.css";
@@ -10,7 +9,7 @@ import { tamaguiConfig } from "../../tamagui.config";
 import { useAuthStore } from "../Store/authStore";
 SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  // const colorScheme = useColorScheme();
   const [queryClient] = useState(() => new QueryClient());
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const isHydrated = useAuthStore((state) => state.isHydrated);
@@ -22,7 +21,7 @@ export default function RootLayout() {
   }, [isHydrated]);
   return (
     <QueryClientProvider client={queryClient}>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme!}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme={"dark"}>
         <ThemeProvider value={DarkTheme}>
           <Stack>
             <Stack.Protected guard={Boolean(refreshToken)}>

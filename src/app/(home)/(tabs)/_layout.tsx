@@ -1,14 +1,17 @@
+import { useSignalRStore } from "@/src/Store/signalRStore";
 import { Tabs } from "expo-router";
 import { MessageSquareText, Phone, Settings } from "lucide-react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Text, View } from "tamagui";
 const HomeLayout = () => {
+  const connectionState = useSignalRStore().connectionState;
   return (
     <GestureHandlerRootView>
       <Tabs>
         <Tabs.Screen
           name="Index"
           options={{
-            headerTitle: "Chats",
+            headerTitle: "",
             tabBarLabel: "Chats",
             tabBarIcon: ({ color, focused }) => (
               <MessageSquareText
@@ -16,6 +19,21 @@ const HomeLayout = () => {
                 color={color}
               />
             ),
+            headerSearchBarOptions: {
+              onOpen: () => {
+                console.log("open");
+              },
+              onSubmitEditing: () => {
+                console.log("search");
+              },
+            },
+            headerLeft: (props) => {
+              return (
+                <View ml={"$4"}>
+                  <Text>{connectionState}</Text>
+                </View>
+              );
+            },
           }}
         />
         <Tabs.Screen

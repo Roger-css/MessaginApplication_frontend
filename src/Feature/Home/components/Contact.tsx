@@ -1,3 +1,4 @@
+import { UserContact } from "@/src/Types/Contacts";
 import { router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -8,10 +9,9 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Avatar, Text, View, XStack, YStack } from "tamagui";
-import { Chat } from "../utils/Data";
 import { FormatChatDate } from "../utils/DateHumanizer";
 
-const Contact = ({ props }: { props: Chat }) => {
+const Contact = ({ props }: { props: UserContact }) => {
   const touchX = useSharedValue(0);
   const rippleWidth = useSharedValue(0);
   const rippleOpacity = useSharedValue(0);
@@ -89,7 +89,7 @@ const Contact = ({ props }: { props: Chat }) => {
 
         <Avatar size="$5">
           <Avatar.Image
-            source={{ uri: props.picture }}
+            source={{ uri: props.photoUrl }}
             borderRadius={100}
             objectFit="cover"
           />
@@ -111,7 +111,8 @@ const Contact = ({ props }: { props: Chat }) => {
           items="flex-start"
         >
           <Text color="$black10" fontSize={10} numberOfLines={1}>
-            {FormatChatDate(props.date)}
+            {props.lastMessage?.createdAt &&
+              FormatChatDate(props.lastMessage?.createdAt)}
           </Text>
         </View>
       </XStack>

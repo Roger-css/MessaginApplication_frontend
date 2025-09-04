@@ -1,10 +1,11 @@
+import { axios } from "@/src/API/Base";
 import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
-import axios from "axios";
+import { AxiosError } from "axios";
 import { Toast } from "toastify-react-native";
 import { useAuthStore } from "../Store/authStore";
 import { useSignalRStore } from "../Store/signalRStore";
@@ -62,16 +63,15 @@ class SignalRService {
         });
         return token;
       }
-
       if (error) {
-        logout();
         throw new Error(error.join(", "));
       }
-
-      throw new Error("Invalid refresh response");
-    } catch {
-      logout();
-      Toast.error("Your session expired, need to login again");
+    } catch (error) {
+      console.log(`performTokenRefresh ${error}`);
+      if ((error as AxiosError)?.status === 401) {
+        logout();
+        Toast.error("Your session expired, need to login again");
+      }
     }
   }
 
@@ -79,25 +79,16 @@ class SignalRService {
     const { accessToken, refreshToken, expiredAt } = useAuthStore.getState();
 
     // If no tokens available, return empty string
-    if (!accessToken || !refreshToken) {
-      return "";
+    if (!accessToken || !refreshToken || !expiredAt) {
+      throw new Error("No tokens available");
     }
 
-    if (expiredAt && new Date(expiredAt).getTime() - Date.now() < 5 * 1000) {
+    if (new Date(expiredAt).getTime() - Date.now() < 5 * 1000) {
       // Token has expired, refresh it
       const newToken = await this.refreshAccessToken();
       return newToken;
     }
-
-    if (accessToken) {
-      return accessToken;
-    }
-    try {
-      return await this.refreshAccessToken();
-    } catch (refreshError) {
-      console.error("Token refresh failed:", refreshError);
-      return "";
-    }
+    return accessToken;
   }
 
   async createConnection(): Promise<HubConnection> {
@@ -112,7 +103,7 @@ class SignalRService {
           try {
             return await this.getValidAccessToken();
           } catch (error) {
-            console.error("Failed to get access token for SignalR:", error);
+            console.log("Failed to get access token for SignalR:", error);
             return "";
           }
         },
@@ -161,7 +152,7 @@ class SignalRService {
     } catch (error) {
       setConnectionState(HubConnectionState.Disconnected);
       setError(error instanceof Error ? error.message : "Unknown error");
-      throw error;
+      console.log("Error starting connection:", error);
     }
   }
 
