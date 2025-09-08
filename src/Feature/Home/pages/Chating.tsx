@@ -1,51 +1,24 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
-import { useSignalRListener } from "@/src/Hooks/useSignalRListener";
-import {
-  ReceivedMessagePayload,
-  SendMessageRequest,
-} from "@/src/Types/Message";
-import { Send } from "lucide-react-native";
+import { SendMessageRequest } from "@/src/Types/message";
+import { SendHorizonal } from "lucide-react-native";
 import { Keyboard } from "react-native";
 import { GiftedChat, IMessage, InputToolbar } from "react-native-gifted-chat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, TextArea, View } from "tamagui";
-import { Toast } from "toastify-react-native";
 type Props = {
-  userId: string;
+  conversationId: string;
 };
 const Chating = (props: Props) => {
+  const currentUserId = useGetCurrentUserId();
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
-  useSignalRListener("OnMessageReceive", onMessageReceive);
-  useSignalRListener("OnMessageFailure", onMessageFailure);
-  function onMessageReceive(payload: ReceivedMessagePayload) {
-    const message: IMessage[] = [
-      {
-        _id: payload.id,
-        createdAt: new Date(payload.createdAt),
-        text: payload.text || "",
-        user: { _id: 2 },
-      },
-    ];
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, message)
-    );
-  }
-  function onMessageFailure(clientId: string) {
-    Toast.error("Message failed to send" + clientId);
-  }
-  const [messages, setMessages] = useState<IMessage[]>([
-    {
-      _id: 1,
-      text: "Hello developer",
-      createdAt: new Date(),
-      user: { _id: 2 },
-    },
-  ]);
 
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
       setKeyboardVisible(true)
@@ -64,13 +37,16 @@ const Chating = (props: Props) => {
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, messages)
       );
-      // const payload: SendMessageRequest = {
-      //   clientId: crypto.randomUUID(),
-      //   senderId:
-      // };
-      await invoke<SendMessageRequest>("sendMessage");
+      const messageToSend: SendMessageRequest = {
+        clientId: crypto.randomUUID(),
+        senderId: currentUserId!,
+        text: messages[0].text,
+        media: [],
+        conversationId: props.conversationId,
+      };
+      await invoke<SendMessageRequest>("sendMessage", messageToSend);
     },
-    [invoke]
+    [currentUserId, invoke, props.conversationId]
   );
 
   return (
@@ -105,7 +81,7 @@ const Chating = (props: Props) => {
                 <Button
                   height={"$6"}
                   bg={"$green6"}
-                  icon={<Send size={20} />}
+                  icon={<SendHorizonal size={20} />}
                 />
               );
             }}
@@ -133,4 +109,4 @@ const Chating = (props: Props) => {
   );
 };
 
-export default React.memo(Chating);
+export default Chating;

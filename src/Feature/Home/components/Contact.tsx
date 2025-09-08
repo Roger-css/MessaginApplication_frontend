@@ -1,4 +1,4 @@
-import { UserContact } from "@/src/Types/Contacts";
+import { UnInitializedContact, UserContact } from "@/src/Types/contacts";
 import { router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -10,8 +10,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { Avatar, Text, View, XStack, YStack } from "tamagui";
 import { FormatChatDate } from "../utils/DateHumanizer";
-
-const Contact = ({ props }: { props: UserContact }) => {
+type ContactProps = { props: UserContact | UnInitializedContact; url: string };
+const Contact = ({ props, url }: ContactProps) => {
   const touchX = useSharedValue(0);
   const rippleWidth = useSharedValue(0);
   const rippleOpacity = useSharedValue(0);
@@ -21,15 +21,11 @@ const Contact = ({ props }: { props: UserContact }) => {
       rippleWidth.value = 0;
       rippleOpacity.value = 0;
     })
-
     .onBegin((e) => {
       touchX.value = e.x;
-
       // Reset and start animation (slightly different for long press)
       rippleWidth.value = 0;
       rippleOpacity.value = 0.15;
-
-      // Slower expansion for long press
       rippleWidth.value = withDelay(
         50,
         withTiming(800, {
@@ -38,7 +34,6 @@ const Contact = ({ props }: { props: UserContact }) => {
         })
       );
 
-      // Longer fade for long press
       rippleOpacity.value = withDelay(
         50,
         withTiming(0, {
@@ -56,17 +51,17 @@ const Contact = ({ props }: { props: UserContact }) => {
       position: "absolute",
       height: 70, // Same height as chat item
       width: rippleWidth.value,
-      backgroundColor: "#ffffffff", // Dark ripple for light theme, adjust as needed
+      backgroundColor: "#ffffffff",
       opacity: rippleOpacity.value,
-      left: touchX.value, // Center on touch point
+      left: touchX.value,
       top: 0,
       pointerEvents: "none",
-      borderRadius: 0, // No border radius for rectangular ripple
+      borderRadius: 0,
       transform: [{ translateX: `${-50}%` }],
     };
   });
   const onPress = async () => {
-    router.push("/(home)/chat/1");
+    router.push(`/(home)/chat/${url}`);
   };
   return (
     <GestureDetector gesture={composedGesture}>
@@ -87,19 +82,21 @@ const Contact = ({ props }: { props: UserContact }) => {
         {/* Ripple effect layer */}
         <Animated.View style={rippleAnimatedStyle} />
 
-        <Avatar size="$5">
-          <Avatar.Image
-            source={{ uri: props.photoUrl }}
-            borderRadius={100}
-            objectFit="cover"
-          />
-          <Avatar.Fallback delayMs={300} bg="grey" />
-        </Avatar>
+        {props.photoUrl ? (
+          <Avatar size="$5" circular>
+            <Avatar.Image source={{ uri: props.photoUrl }} objectFit="cover" />
+            <Avatar.Fallback delayMs={300} bg="green" />
+          </Avatar>
+        ) : (
+          <Avatar size="$5" circular bg={"$green5"}>
+            <Text>{props.name.charAt(0)}</Text>
+          </Avatar>
+        )}
 
         <YStack gap="$1" flex={1}>
           <Text>{props.name}</Text>
           <Text fontSize="$2" color="$black11" numberOfLines={1}>
-            {props.lastMessage}
+            {props.lastMessage || "say hi"}
           </Text>
         </YStack>
 

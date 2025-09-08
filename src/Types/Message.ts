@@ -9,14 +9,15 @@ export type SendMessageRequest = {
 };
 export type ReceivedMessagePayload = {
   id: string;
-  conversationId: string;
-  senderId: string;
+  conversationId?: string;
+  senderId?: string;
   replyToMessageId?: string;
   text?: string;
   type: MessageType;
   media: MediaItem[];
   createdAt: string;
 };
+export type Message = ReceivedMessagePayload & { status: MessageStatus };
 
 export type MediaItem = {
   type: MediaType;
@@ -28,11 +29,16 @@ export enum MessageType {
   Media,
   System,
 }
-
 export enum MediaType {
   Image,
   Video,
   File,
   Audio,
   VoiceMessage,
+}
+export enum MessageStatus {
+  Pending,
+  Sent,
+  Delivered,
+  Failed,
 }

@@ -2,8 +2,8 @@ import { axios } from "@/src/API/Base";
 import { useAuthStore } from "@/src/Store/authStore";
 
 import { useSessionStore } from "@/src/Store/otpSessionStore";
-import { AuthResponse } from "@/src/Types/Auth";
-import { CreateProfileRequest } from "@/src/Types/User";
+import { AuthResponse } from "@/src/Types/auth";
+import { CreateProfileRequest } from "@/src/Types/user";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import mime from "mime";

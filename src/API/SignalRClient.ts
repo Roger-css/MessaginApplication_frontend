@@ -9,7 +9,7 @@ import { AxiosError } from "axios";
 import { Toast } from "toastify-react-native";
 import { useAuthStore } from "../Store/authStore";
 import { useSignalRStore } from "../Store/signalRStore";
-import { AuthResponse, RefreshTokenRequest } from "../Types/Auth";
+import { AuthResponse, RefreshTokenRequest } from "../Types/auth";
 
 class SignalRService {
   private isRefreshingToken = false;

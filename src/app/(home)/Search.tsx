@@ -1,12 +1,7 @@
-import { SafeAreaView } from "react-native";
-import { Text } from "tamagui";
+import SearchPage from "@/src/Feature/Home/pages/SearchPage";
 
 const Search = () => {
-  return (
-    <SafeAreaView>
-      <Text>Search</Text>
-    </SafeAreaView>
-  );
+  return <SearchPage />;
 };
 
 export default Search;

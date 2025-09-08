@@ -5,11 +5,11 @@ export const useSignalRInvoke = () => {
   const { connection, isConnected, setError } = useSignalRStore();
 
   const invoke = useCallback(
-    async <T, R>(
+    async <T, R = void>(
       methodName: string,
       argument?: T,
       ...additionalArgs: any[]
-    ) => {
+    ): Promise<R> => {
       if (!isConnected || !connection) {
         throw new Error("SignalR connection is not established");
       }

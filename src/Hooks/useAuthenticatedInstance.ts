@@ -3,7 +3,7 @@ import { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { useCallback, useEffect, useRef } from "react";
 import { axios } from "../API/Base";
 import { useAuthStore } from "../Store/authStore";
-import { AuthResponse, RefreshTokenRequest } from "../Types/Auth";
+import { AuthResponse, RefreshTokenRequest } from "../Types/auth";
 
 export const useAxiosAuth = () => {
   // Zustand store selectors

@@ -1,5 +1,5 @@
 import { useAxiosAuth } from "@/src/Hooks/useAuthenticatedInstance";
-import { AuthResponse, SendOtpVerificationRequest } from "@/src/Types/Auth";
+import { AuthResponse, SendOtpVerificationRequest } from "@/src/Types/auth";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 

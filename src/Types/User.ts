@@ -8,3 +8,7 @@ export type CreateProfileRequest = {
   bio?: string;
   picture?: File;
 };
+export enum UserStatus {
+  Online = "Online",
+  Offline = "Offline",
+}

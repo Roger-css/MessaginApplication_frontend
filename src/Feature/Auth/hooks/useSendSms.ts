@@ -1,5 +1,5 @@
 import { axios } from "@/src/API/Base";
-import { SendSmsRequest } from "@/src/Types/Auth";
+import { SendSmsRequest } from "@/src/Types/auth";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 

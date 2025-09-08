@@ -35,13 +35,9 @@ export const useSignalR = (): UseSignalRReturn => {
   }, []);
 
   const reconnect = async (): Promise<void> => {
-    try {
-      await SignalRService.stopConnection();
-      await SignalRService.createConnection();
-      await SignalRService.startConnection();
-    } catch (error) {
-      console.log("Failed to reconnect:", error);
-    }
+    await SignalRService.stopConnection();
+    await SignalRService.createConnection();
+    await SignalRService.startConnection();
   };
 
   return {
