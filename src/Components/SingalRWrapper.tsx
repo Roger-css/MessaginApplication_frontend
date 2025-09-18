@@ -1,10 +1,13 @@
 import { HubConnectionState } from "@microsoft/signalr";
 import * as Network from "expo-network";
-import { ReactNode, useEffect } from "react";
-import { View } from "tamagui";
+import { useEffect } from "react";
+
+import { useReceiveMessage } from "../Feature/Home/hooks/useReceiveMessage";
 import { useSignalR } from "../Hooks/useSignalR";
-const SignalRWrapper = ({ children }: { children: ReactNode }) => {
+export const useSignalRWrapper = () => {
   const { connectionState, reconnect } = useSignalR();
+  useReceiveMessage();
+
   useEffect(() => {
     let reconnectInterval: number;
     let reconnectAttempts = 0;
@@ -73,6 +76,4 @@ const SignalRWrapper = ({ children }: { children: ReactNode }) => {
       if (reconnectInterval) clearInterval(reconnectInterval);
     };
   }, [connectionState, reconnect]);
-  return <View height={"100%"}>{children}</View>;
 };
-export default SignalRWrapper;

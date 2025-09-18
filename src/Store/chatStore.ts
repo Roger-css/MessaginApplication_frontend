@@ -9,12 +9,16 @@ import {
   MessageType,
   ReceivedMessagePayload,
 } from "../Types/message";
+import { UserStatus } from "../Types/user";
 
-type Conversation = {
+export type Conversation = {
   id: string;
   participants: UserContact[];
-  lastMessage: LastMessage;
+  lastMessage?: LastMessage;
   messages: Message[];
+  photoUrl: string | null;
+  name: string;
+  status: UserStatus | null;
   unreadCount: number;
 };
 
@@ -242,9 +246,7 @@ export const useChatStore = create<ChatState & ChatActions>()(
               },
               //unreadCount: conversation.unreadCount + 1,
             };
-
             newConversations.set(message.conversationId, updatedConversation);
-
             return {
               conversations: newConversations,
             };
@@ -254,11 +256,6 @@ export const useChatStore = create<ChatState & ChatActions>()(
       {
         name: "conversations-storage",
         storage: createJSONStorage(() => customStorage),
-        // Add partialize to ensure only the state we want is persisted
-        partialize: (state) => ({
-          conversations: state.conversations,
-          ui: state.ui,
-        }),
         onRehydrateStorage: () => {
           console.log("🔄 onRehydrateStorage - starting rehydration");
           return (state, error) => {
@@ -277,13 +274,17 @@ export const useChatStore = create<ChatState & ChatActions>()(
                 console.log("🔧 Converting conversations to Map...");
                 const conversations = state.conversations;
                 if (Array.isArray(conversations)) {
+                  console.log("🔧 conversations is an array");
                   state.conversations = new Map(conversations);
                 } else if (
                   typeof conversations === "object" &&
                   conversations !== null
                 ) {
+                  console.log("🔧 conversations is an object");
+
                   state.conversations = new Map(Object.entries(conversations));
                 } else {
+                  console.log("delete conversations, initializing new one");
                   state.conversations = new Map();
                 }
                 console.log(

@@ -1,5 +1,4 @@
-import { useChatStore } from "@/src/Store/chatStore";
-import { UnInitializedContact, UserContact } from "@/src/Types/contacts";
+import { Conversation, useChatStore } from "@/src/Store/chatStore";
 import { router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -12,7 +11,7 @@ import Animated, {
 import { Avatar, Text, View, XStack, YStack } from "tamagui";
 import { FormatChatDate } from "../utils/DateHumanizer";
 type ContactProps = {
-  props: UserContact | UnInitializedContact;
+  props: Conversation;
   url: string;
   firstTime: boolean;
 };
@@ -101,7 +100,7 @@ const Contact = ({ props, url, firstTime }: ContactProps) => {
           </Avatar>
         ) : (
           <Avatar size="$5" circular bg={"$green5"}>
-            <Text>{props.name.charAt(0)}</Text>
+            <Text>{props.name?.charAt(0)}</Text>
           </Avatar>
         )}
 

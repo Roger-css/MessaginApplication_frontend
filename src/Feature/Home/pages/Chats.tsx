@@ -5,17 +5,16 @@ import EmptyPage from "../components/EmptyPage";
 import MySeparator from "../components/MySeparator";
 import { useFetchConversations } from "../hooks/useFetchConversations";
 const Chats = () => {
-  const { chats, isFetching, isLoading, refetch } = useFetchConversations();
+  const { conversations, isFetching, isLoading, refetch } =
+    useFetchConversations();
   return (
     <View height={"100%"} bg={"$black3"}>
       <FlashList
         renderItem={({ item }) => {
-          return (
-            <Contact props={item} url={item.conversationId} firstTime={false} />
-          );
+          return <Contact props={item} url={item.id} firstTime={false} />;
         }}
-        keyExtractor={(e) => e.name}
-        data={chats}
+        keyExtractor={(e) => e.id}
+        data={conversations}
         estimatedItemSize={134}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={MySeparator}

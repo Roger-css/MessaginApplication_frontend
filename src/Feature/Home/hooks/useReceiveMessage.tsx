@@ -4,43 +4,48 @@ import { useChatStore } from "@/src/Store/chatStore";
 import { UserContact } from "@/src/Types/contacts";
 import { MessageStatus, ReceivedMessagePayload } from "@/src/Types/message";
 import { HubResponse } from "@/src/Types/shared";
+import { useCallback } from "react";
 import { Toast } from "toastify-react-native";
 
-const useReceiveMessage = () => {
-  useSignalRListener("onmessagefailure", onMessageFailure);
+export const useReceiveMessage = () => {
   const { receiveMessage, conversationExist, addConversation } = useChatStore();
   const { invoke } = useSignalRInvoke();
-  const handleIncomingMessage = async (message: ReceivedMessagePayload) => {
-    console.log("incoming message received: ", message);
-    console.log(
-      `Stringified incoming message received: ${JSON.stringify(message)}`
-    );
 
-    try {
-      const { conversationId } = message;
-      if (!conversationExist(conversationId)) {
-        const { data, success } = await invoke<
-          string,
-          HubResponse<UserContact>
-        >("GetConversationInfo", conversationId);
-        if (!success) return;
-        addConversation({
-          id: data.conversationId,
-          lastMessage: message,
-          messages: [{ ...message, status: MessageStatus.Read }],
-          participants: [data],
-          unreadCount: 0,
-        });
-      } else {
-        receiveMessage(message);
+  const handleIncomingMessage = useCallback(
+    async function (message: ReceivedMessagePayload) {
+      try {
+        const { conversationId } = message;
+        if (!conversationExist(conversationId)) {
+          const { data, success } = await invoke<
+            string,
+            HubResponse<UserContact>
+          >("GetConversationInfo", conversationId);
+          if (!success) return;
+
+          addConversation({
+            id: data.conversationId,
+            lastMessage: message,
+            messages: [{ ...message, status: MessageStatus.Read }],
+            participants: [data],
+            unreadCount: 0,
+            status: data.status,
+            name: data.name,
+            photoUrl: data.photoUrl || null,
+          });
+          console.log("Added Conversation with its message");
+        } else {
+          receiveMessage(message);
+          console.log("Added message to existing conversation");
+        }
+      } catch (error) {
+        console.log("error occurred in useReceiveMessage", error);
       }
-    } catch (error) {
-      console.log("error occurred in useReceiveMessage", error);
-    }
-  };
-  useSignalRListener("onmessagereceive", handleIncomingMessage);
-  function onMessageFailure(clientId: string) {
+    },
+    [addConversation, conversationExist, invoke, receiveMessage]
+  );
+  useSignalRListener("OnMessageReceive", handleIncomingMessage);
+  const onMessageFailure = useCallback(function (clientId: string) {
     Toast.error("Message failed to send" + clientId);
-  }
+  }, []);
+  useSignalRListener("OnMessageFailure", onMessageFailure);
 };
-export default useReceiveMessage;

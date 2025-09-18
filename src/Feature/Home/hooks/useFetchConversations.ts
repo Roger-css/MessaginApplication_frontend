@@ -1,11 +1,13 @@
 import { useAxiosAuth } from "@/src/Hooks/useAuthenticatedInstance";
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
+import { Conversation, useChatStore } from "@/src/Store/chatStore";
 import { UserContact } from "@/src/Types/contacts";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { useEffect } from "react";
 
 export const useFetchConversations = () => {
-  // const { conversations, addConversation } = useChatStore();
+  const { conversations, addConversation } = useChatStore();
 
   const axios = useAxiosAuth();
   const id = useGetCurrentUserId();
@@ -20,6 +22,28 @@ export const useFetchConversations = () => {
     refetchOnReconnect: true,
     retry: 1,
   });
+  useEffect(() => {
+    if (!isLoading) {
+      chats?.forEach((chat) => {
+        const conversation: Conversation = {
+          id: chat.conversationId,
+          lastMessage: chat.lastMessage,
+          messages: [],
+          participants: [],
+          unreadCount: chat.unreadCount,
+          status: chat.status,
+          name: chat.name,
+          photoUrl: chat.photoUrl || null,
+        };
+        addConversation(conversation);
+      });
+    }
+  }, [addConversation, chats, isLoading]);
 
-  return { chats, isLoading, refetch, isFetching };
+  return {
+    conversations: Array.from(conversations.values()),
+    isLoading,
+    refetch,
+    isFetching,
+  };
 };

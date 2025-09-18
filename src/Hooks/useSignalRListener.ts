@@ -11,8 +11,10 @@ export const useSignalRListener = (
   useEffect(() => {
     if (connection) {
       connection.on(eventName, handler);
-
+      console.log("listener added: ", eventName);
       return () => {
+        console.log("listener removed: ", eventName);
+
         connection.off(eventName, handler);
       };
     }

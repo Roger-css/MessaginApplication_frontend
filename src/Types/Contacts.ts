@@ -1,4 +1,5 @@
 import { MessageType } from "./message";
+import { UserStatus } from "./user";
 
 export type LastMessage = {
   text?: string;
@@ -14,7 +15,7 @@ export type UserContact = {
   photoUrl?: string;
   unreadCount: number;
   lastMessage?: LastMessage;
-  status: string;
+  status: UserStatus;
 };
 export type UnInitializedContact = {
   userId: string;

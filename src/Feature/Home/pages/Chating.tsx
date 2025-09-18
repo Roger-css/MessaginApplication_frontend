@@ -24,8 +24,8 @@ const Chating = () => {
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
   const storedMessages = useGetStoredMessages(ui.currentChatId);
-  const [messages, setMessages] = useState<IMessage[]>(storedMessages);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  console.log("Chating stored messages: ", storedMessages);
 
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
@@ -41,9 +41,8 @@ const Chating = () => {
   }, []);
   const onSend = useCallback(
     async (messages: IMessage[] = []) => {
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, messages)
-      );
+      GiftedChat.append(storedMessages, messages);
+
       try {
         if (ui.isFirstTime === false) {
           const messageToSend: SendMessageRequest = {
@@ -79,7 +78,14 @@ const Chating = () => {
         console.log(error);
       }
     },
-    [currentUserId, invoke, ui.currentChatId, ui.isFirstTime, addPendingMessage]
+    [
+      storedMessages,
+      ui.isFirstTime,
+      ui.currentChatId,
+      currentUserId,
+      invoke,
+      addPendingMessage,
+    ]
   );
 
   return (
@@ -93,7 +99,7 @@ const Chating = () => {
       bg={"$black2"}
     >
       <GiftedChat
-        messages={messages}
+        messages={storedMessages}
         onSend={(messages) => onSend(messages)}
         user={{
           _id: 1,

@@ -35,7 +35,8 @@ export const useGetStoredMessages = (conversationId?: string) => {
   };
   if (isFirstTime.current) {
     const storedMessages = conversations?.get(conversationId!)?.messages;
-
+    console.log("stored conversations: ", conversations);
+    console.log("#################################");
     console.log("Stored messages: ", storedMessages);
     setMessages(transformMessages(storedMessages ?? []));
     isFirstTime.current = false;
