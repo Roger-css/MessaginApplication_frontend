@@ -67,7 +67,7 @@ class SignalRService {
         throw new Error(error.join(", "));
       }
     } catch (error) {
-      console.log(`performTokenRefresh ${error}`);
+      console.log(`performTokenRefresh`);
       if ((error as AxiosError)?.status === 401) {
         logout();
         Toast.error("Your session expired, need to login again");
@@ -102,11 +102,12 @@ class SignalRService {
         accessTokenFactory: async () => {
           try {
             return await this.getValidAccessToken();
-          } catch (error) {
-            console.log("Failed to get access token for SignalR:", error);
+          } catch {
+            console.log("Failed to get access token for SignalR");
             return "";
           }
         },
+        timeout: Infinity, //! Testing
       })
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Information)
@@ -152,7 +153,7 @@ class SignalRService {
     } catch (error) {
       setConnectionState(HubConnectionState.Disconnected);
       setError(error instanceof Error ? error.message : "Unknown error");
-      console.log("Error starting connection:", error);
+      console.log("Error starting connection");
     }
   }
 
@@ -165,8 +166,8 @@ class SignalRService {
         await connection.stop();
         setConnection(null);
         setConnectionState(HubConnectionState.Disconnected);
-      } catch (error) {
-        console.log("Error stopping connection:", error);
+      } catch {
+        console.log("Error stopping connection");
       }
     }
   }

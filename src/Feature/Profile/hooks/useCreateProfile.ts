@@ -21,9 +21,9 @@ export const useCreateProfile = () => {
       sessionId: sessionId!,
       number: number!,
       countryCode: countryCode!,
-      name: data.name,
-      bio: data.bio,
-      userName: data.username,
+      name: data.name?.trim(),
+      bio: data.bio?.trim(),
+      userName: data.username?.trim(),
     };
     const formdata = new FormData();
     Object.keys(requestData).forEach((key) => {

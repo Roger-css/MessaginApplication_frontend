@@ -26,8 +26,8 @@ const SignalRWrapper = ({ children }: { children: ReactNode }) => {
               clearInterval(reconnectInterval);
               reconnectAttempts = 0;
             }
-          } catch (error) {
-            console.log(error);
+          } catch {
+            console.log("error in reconnect attempt");
 
             reconnectAttempts++;
 

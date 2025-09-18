@@ -37,7 +37,7 @@
     "expo-linking": "~7.1.7",
     "expo-localization": "~16.1.6",
     "expo-network": "~7.1.5",
-    "expo-router": "~5.1.5",
+    "expo-router": "~5.1.6",
     "expo-secure-store": "~14.2.4",
     "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
@@ -63,7 +63,8 @@
     "toastify-react-native": "^7.2.3",
     "undefined": "@hookform/resolvers/zod",
     "zod": "^4.0.17",
-    "zustand": "^5.0.7"
+    "zustand": "^5.0.7",
+    "expo-crypto": "~14.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

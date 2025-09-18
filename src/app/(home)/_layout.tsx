@@ -6,7 +6,7 @@ export default function HomeLayout() {
     <SignalRWrapper>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="chat/index" options={{ headerShown: false }} />
         <Stack.Screen name="Search" options={{ headerShown: false }} />
       </Stack>
     </SignalRWrapper>

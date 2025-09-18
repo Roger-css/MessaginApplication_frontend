@@ -49,7 +49,7 @@ const SearchPage = () => {
         <YStack flex={1}>
           <FlashList
             renderItem={({ item }) => {
-              return <Contact props={item} url={"-1"} />;
+              return <Contact props={item} url={item.userId} firstTime />;
             }}
             keyExtractor={(e) => e.name}
             data={data}

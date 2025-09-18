@@ -1,3 +1,4 @@
+import { useChatStore } from "@/src/Store/chatStore";
 import { UnInitializedContact, UserContact } from "@/src/Types/contacts";
 import { router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -10,8 +11,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { Avatar, Text, View, XStack, YStack } from "tamagui";
 import { FormatChatDate } from "../utils/DateHumanizer";
-type ContactProps = { props: UserContact | UnInitializedContact; url: string };
-const Contact = ({ props, url }: ContactProps) => {
+type ContactProps = {
+  props: UserContact | UnInitializedContact;
+  url: string;
+  firstTime: boolean;
+};
+const Contact = ({ props, url, firstTime }: ContactProps) => {
   const touchX = useSharedValue(0);
   const rippleWidth = useSharedValue(0);
   const rippleOpacity = useSharedValue(0);
@@ -60,8 +65,15 @@ const Contact = ({ props, url }: ContactProps) => {
       transform: [{ translateX: `${-50}%` }],
     };
   });
+  const setActiveConversation = useChatStore(
+    (state) => state.setActiveConversation
+  );
   const onPress = async () => {
-    router.push(`/(home)/chat/${url}`);
+    setActiveConversation({
+      isFirstTime: firstTime,
+      currentChatId: url,
+    });
+    router.push(`/(home)/chat`);
   };
   return (
     <GestureDetector gesture={composedGesture}>
@@ -96,7 +108,7 @@ const Contact = ({ props, url }: ContactProps) => {
         <YStack gap="$1" flex={1}>
           <Text>{props.name}</Text>
           <Text fontSize="$2" color="$black11" numberOfLines={1}>
-            {props.lastMessage || "say hi"}
+            {props.lastMessage?.text || "say hi"}
           </Text>
         </YStack>
 

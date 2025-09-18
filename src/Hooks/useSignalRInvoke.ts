@@ -10,6 +10,8 @@ export const useSignalRInvoke = () => {
       argument?: T,
       ...additionalArgs: any[]
     ): Promise<R> => {
+      console.log({ connection, isConnected });
+
       if (!isConnected || !connection) {
         throw new Error("SignalR connection is not established");
       }

@@ -2,21 +2,29 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
-import { SendMessageRequest } from "@/src/Types/message";
+import { useChatStore } from "@/src/Store/chatStore";
+import {
+  AddMessageLocally,
+  MediaItem,
+  MessageStatus,
+  SendMessageRequest,
+} from "@/src/Types/message";
+import * as Crypto from "expo-crypto";
 import { SendHorizonal } from "lucide-react-native";
 import { Keyboard } from "react-native";
 import { GiftedChat, IMessage, InputToolbar } from "react-native-gifted-chat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, TextArea, View } from "tamagui";
-type Props = {
-  conversationId: string;
-};
-const Chating = (props: Props) => {
+import { useGetStoredMessages } from "../hooks/useGetStoredMessages";
+
+const Chating = () => {
+  const { ui, addPendingMessage } = useChatStore();
+  if (!ui.currentChatId) throw new Error("No chat id found");
   const currentUserId = useGetCurrentUserId();
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
-
-  const [messages, setMessages] = useState<IMessage[]>([]);
+  const storedMessages = useGetStoredMessages(ui.currentChatId);
+  const [messages, setMessages] = useState<IMessage[]>(storedMessages);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
@@ -33,20 +41,45 @@ const Chating = (props: Props) => {
   }, []);
   const onSend = useCallback(
     async (messages: IMessage[] = []) => {
-      messages[0].pending = true;
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, messages)
       );
-      const messageToSend: SendMessageRequest = {
-        clientId: crypto.randomUUID(),
-        senderId: currentUserId!,
-        text: messages[0].text,
-        media: [],
-        conversationId: props.conversationId,
-      };
-      await invoke<SendMessageRequest>("sendMessage", messageToSend);
+      try {
+        if (ui.isFirstTime === false) {
+          const messageToSend: SendMessageRequest = {
+            clientId: Crypto.randomUUID(),
+            senderId: currentUserId!,
+            text: messages[0].text,
+            media: [],
+            conversationId: ui.currentChatId,
+          };
+          await invoke<SendMessageRequest>("sendMessage", messageToSend);
+          const messageToStore: AddMessageLocally = {
+            conversationId: messageToSend.conversationId!,
+            senderId: messageToSend.senderId,
+            clientId: messageToSend.clientId,
+            media: messageToSend.media as unknown as MediaItem[],
+            replyToMessageId: messageToSend.replyToMessageId,
+            text: messageToSend.text,
+            status: MessageStatus.Pending,
+            createdAt: new Date().toISOString(),
+          };
+          addPendingMessage(messageToStore);
+        } else {
+          const messageToSend: SendMessageRequest = {
+            clientId: Crypto.randomUUID(),
+            senderId: currentUserId!,
+            text: messages[0].text,
+            media: [],
+            receiverId: ui.currentChatId,
+          };
+          await invoke<SendMessageRequest>("sendMessage", messageToSend);
+        }
+      } catch (error) {
+        console.log(error);
+      }
     },
-    [currentUserId, invoke, props.conversationId]
+    [currentUserId, invoke, ui.currentChatId, ui.isFirstTime, addPendingMessage]
   );
 
   return (
@@ -76,12 +109,19 @@ const Chating = (props: Props) => {
               backgroundColor: "#222",
               borderTopWidth: 0,
             }}
-            renderSend={() => {
+            renderSend={(props) => {
+              const disabled = !props.text || props.text.trim().length === 0;
               return (
                 <Button
                   height={"$6"}
-                  bg={"$green6"}
+                  bg={disabled ? "$accent10" : "$green6"}
                   icon={<SendHorizonal size={20} />}
+                  onPress={() => {
+                    if (props.text && props.onSend) {
+                      props.onSend([{ text: props.text.trim() }], true);
+                    }
+                  }}
+                  disabled={disabled}
                 />
               );
             }}

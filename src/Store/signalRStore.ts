@@ -26,7 +26,9 @@ const signalRStore = (set: any): SignalRStore => ({
   isConnected: false,
   error: null,
 
-  setConnection: (connection: HubConnection | null) => set({ connection }),
+  setConnection: (connection: HubConnection | null) => {
+    set({ connection });
+  },
   setConnectionState: (state: HubConnectionState) =>
     set({
       connectionState: state,

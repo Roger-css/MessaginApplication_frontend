@@ -7,17 +7,43 @@ export type SendMessageRequest = {
   replyToMessageId?: string;
   receiverId?: string;
 };
+export type BaseMessage = {
+  senderId: string;
+  text?: string;
+  media?: MediaItem[];
+  replyToMessageId?: string;
+  createdAt: string;
+};
+
+export type AddMessageLocally = BaseMessage & {
+  id?: string;
+  conversationId: string;
+  status: MessageStatus.Pending;
+  clientId?: string;
+};
+
+export type PendingMessage = BaseMessage & {
+  receiverId: string;
+  clientId?: string;
+};
+
+export type Message = BaseMessage & {
+  id?: string;
+  conversationId: string;
+  status: MessageStatus;
+  clientId?: string;
+};
+
 export type ReceivedMessagePayload = {
   id: string;
-  conversationId?: string;
-  senderId?: string;
-  replyToMessageId?: string;
+  conversationId: string;
+  senderId: string;
   text?: string;
   type: MessageType;
   media: MediaItem[];
+  replyToMessageId?: string;
   createdAt: string;
 };
-export type Message = ReceivedMessagePayload & { status: MessageStatus };
 
 export type MediaItem = {
   type: MediaType;
@@ -40,5 +66,6 @@ export enum MessageStatus {
   Pending,
   Sent,
   Delivered,
+  Read,
   Failed,
 }

@@ -11,8 +11,8 @@ export const useGetCurrentUserId = () => {
       try {
         const id = await invoke<undefined, string>("GetCurrentUserId");
         setUser({ id });
-      } catch {
-        console.log("Error getting user id");
+      } catch (error) {
+        console.warn("Error getting user id", error);
       }
     };
     if (id === undefined || id === null) get();
