@@ -1,9 +1,10 @@
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 import { create } from "zustand";
-import { createJSONStorage, devtools, persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { LastMessage, UserContact } from "../Types/contacts";
 import {
   AddMessageLocally,
+  DeliveredMessagePayload,
   Message,
   MessageStatus,
   MessageType,
@@ -27,21 +28,15 @@ type UIState = {
   isFirstTime: boolean;
 };
 
-type UpdateMessage = {
-  messageId: string;
-  conversationId: string;
-  status: MessageStatus;
-};
-
 type ChatState = {
-  conversations: Map<string, Conversation>;
+  conversations: Record<string, Conversation>; // Changed from Map to Record
   ui: UIState;
 };
 
 type ChatActions = {
   addPendingMessage: (message: AddMessageLocally) => void;
   receiveMessage: (message: ReceivedMessagePayload) => void;
-  updateMessage: (props: UpdateMessage) => void;
+  deliveredMessage: (props: DeliveredMessagePayload) => void;
   conversationExist: (id?: string) => boolean;
   addConversation: (
     conversation: Omit<Conversation, "messages" | "participants"> & {
@@ -49,160 +44,140 @@ type ChatActions = {
     }
   ) => void;
   setActiveConversation: (state: UIState) => void;
-  hydrate: () => void;
 };
 
 export const useChatStore = create<ChatState & ChatActions>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        conversations: new Map<string, Conversation>(),
-        ui: {
-          currentChatId: undefined,
-          isFirstTime: true,
-        },
-        hydrate: () => {
-          console.log("onHydration: ", get().conversations);
+  persist(
+    (set, get) => ({
+      conversations: {}, // Simple empty object
+      ui: {
+        currentChatId: undefined,
+        isFirstTime: true,
+      },
 
-          set((state) => {
-            return {
-              conversations: new Map<string, Conversation>(
-                Object.entries(state.conversations)
-              ),
-            };
-          });
-        },
-        addPendingMessage: (message) => {
-          set((state) => {
-            const newConversations = new Map(state.conversations);
-            const conversation = newConversations.get(message.conversationId!);
+      addPendingMessage: (message) => {
+        set((state) => {
+          const conversation = state.conversations[message.conversationId!];
 
-            if (!conversation) {
-              throw new Error("Conversation does not exist");
-            }
-            const lastMessage: LastMessage = {
-              createdAt: message.createdAt,
-              text: message.text,
-              senderId: message.senderId,
-              senderName: undefined,
-              type: message.text ? MessageType.Text : MessageType.Media,
-            };
-            const updatedConversation: Conversation = {
-              ...conversation,
-              messages: [...conversation.messages, message],
-              lastMessage,
-            };
+          if (!conversation) {
+            throw new Error("Conversation does not exist");
+          }
 
-            newConversations.set(message.conversationId!, updatedConversation);
+          const lastMessage: LastMessage = {
+            createdAt: message.createdAt,
+            text: message.text,
+            senderId: message.senderId,
+            senderName: undefined,
+            type: message.text ? MessageType.Text : MessageType.Media,
+          };
 
-            return {
-              conversations: newConversations,
-            };
-          });
-        },
-
-        updateMessage: (messageUpdate) => {
-          set((state) => {
-            const newConversations = new Map(state.conversations);
-            const conversation = newConversations.get(
-              messageUpdate.conversationId
-            );
-
-            if (!conversation) {
-              console.warn(
-                `Conversation ${messageUpdate.conversationId} not found`
-              );
-              return state; // Return unchanged state
-            }
-
-            // Find and update the message
-            const updatedMessages = conversation.messages.map((msg) =>
-              msg.id === messageUpdate.messageId
-                ? { ...msg, status: messageUpdate.status }
-                : msg
-            );
-
-            const updatedConversation = {
-              ...conversation,
-              messages: updatedMessages,
-            };
-
-            newConversations.set(
-              messageUpdate.conversationId,
-              updatedConversation
-            );
-
-            return {
-              conversations: newConversations,
-            };
-          });
-        },
-
-        conversationExist: (id) => {
-          if (!id) return false;
-          return get().conversations.has(id);
-        },
-
-        addConversation: (conversation) => {
-          set((state) => {
-            const newConversations = new Map(state.conversations);
-            const oldConversation = newConversations.get(conversation.id);
-            newConversations.set(conversation.id, {
-              messages: oldConversation?.messages || [],
-              participants: oldConversation?.participants || [],
-              ...conversation,
-            });
-            return {
-              conversations: newConversations,
-            };
-          });
-        },
-
-        setActiveConversation: (state) => {
-          set({ ui: state });
-        },
-
-        receiveMessage: (message) => {
-          set((state) => {
-            const updatedMessage: Message = {
-              ...message,
-              status: MessageStatus.Read,
-            };
-
-            const newConversations = new Map(state.conversations);
-            const conversation = newConversations.get(message.conversationId);
-
-            if (!conversation) {
-              console.warn(`Conversation ${message.conversationId} not found`);
-              return state; // Return unchanged state
-            }
-
-            const updatedConversation: Conversation = {
-              ...conversation,
-              messages: [...conversation.messages, updatedMessage],
-              lastMessage: {
-                text: updatedMessage.text,
-                createdAt: updatedMessage.createdAt,
-                senderId: updatedMessage.senderId,
-                type: MessageType.Text,
+          return {
+            conversations: {
+              ...state.conversations,
+              [message.conversationId!]: {
+                ...conversation,
+                messages: [...conversation.messages, message],
+                lastMessage,
               },
-              //unreadCount: conversation.unreadCount + 1,
-            };
-            newConversations.set(message.conversationId, updatedConversation);
-            return {
-              conversations: newConversations,
-            };
-          });
-        },
-      }),
-      {
-        name: "conversations-storage",
-        storage: createJSONStorage(() => ({
-          getItem: getItemAsync,
-          setItem: setItemAsync,
-          removeItem: deleteItemAsync,
-        })),
-      }
-    )
+            },
+          };
+        });
+      },
+
+      deliveredMessage: (messageUpdate) => {
+        set((state) => {
+          const conversation =
+            state.conversations[messageUpdate.conversationId];
+
+          if (!conversation) {
+            console.warn(
+              `Conversation ${messageUpdate.conversationId} not found`
+            );
+            return state;
+          }
+
+          const updatedMessages = conversation.messages.map((msg) =>
+            msg.clientId === messageUpdate.clientId
+              ? { ...msg, ...messageUpdate }
+              : msg
+          );
+
+          return {
+            conversations: {
+              ...state.conversations,
+              [messageUpdate.conversationId]: {
+                ...conversation,
+                messages: updatedMessages,
+              },
+            },
+          };
+        });
+      },
+
+      conversationExist: (id) => {
+        if (!id) return false;
+        return id in get().conversations;
+      },
+
+      addConversation: (conversation) => {
+        set((state) => {
+          const oldConversation = state.conversations[conversation.id];
+          return {
+            conversations: {
+              ...state.conversations,
+              [conversation.id]: {
+                messages: oldConversation?.messages || [],
+                participants: oldConversation?.participants || [],
+                ...conversation,
+              },
+            },
+          };
+        });
+      },
+
+      setActiveConversation: (uiState) => {
+        set({ ui: uiState });
+      },
+
+      receiveMessage: (message) => {
+        set((state) => {
+          const updatedMessage: Message = {
+            ...message,
+            status: MessageStatus.Read,
+          };
+
+          const conversation = state.conversations[message.conversationId];
+
+          if (!conversation) {
+            console.warn(`Conversation ${message.conversationId} not found`);
+            return state;
+          }
+
+          return {
+            conversations: {
+              ...state.conversations,
+              [message.conversationId]: {
+                ...conversation,
+                messages: [...conversation.messages, updatedMessage],
+                lastMessage: {
+                  text: updatedMessage.text,
+                  createdAt: updatedMessage.createdAt,
+                  senderId: updatedMessage.senderId,
+                  type: MessageType.Text,
+                },
+              },
+            },
+          };
+        });
+      },
+    }),
+    {
+      name: "conversations-storage",
+      storage: createJSONStorage(() => ({
+        getItem: getItemAsync,
+        setItem: setItemAsync,
+        removeItem: deleteItemAsync,
+      })),
+    }
   )
 );

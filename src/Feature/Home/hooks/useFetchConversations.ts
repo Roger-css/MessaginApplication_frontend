@@ -40,7 +40,7 @@ export const useFetchConversations = () => {
   }, [addConversation, chats, isLoading]);
 
   return {
-    conversations: Array.from(conversations.values()),
+    conversations: Object.values(conversations),
     isLoading,
     refetch,
     isFetching,

@@ -2,13 +2,21 @@ import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useSignalRListener } from "@/src/Hooks/useSignalRListener";
 import { useChatStore } from "@/src/Store/chatStore";
 import { UserContact } from "@/src/Types/contacts";
-import { ReceivedMessagePayload } from "@/src/Types/message";
+import {
+  DeliveredMessagePayload,
+  ReceivedMessagePayload,
+} from "@/src/Types/message";
 import { HubResponse } from "@/src/Types/shared";
 import { useCallback } from "react";
 import { Toast } from "toastify-react-native";
 
 export const useReceiveMessage = () => {
-  const { receiveMessage, conversationExist, addConversation } = useChatStore();
+  const {
+    receiveMessage,
+    conversationExist,
+    addConversation,
+    deliveredMessage,
+  } = useChatStore();
   const { invoke } = useSignalRInvoke();
 
   const handleIncomingMessage = useCallback(
@@ -32,10 +40,8 @@ export const useReceiveMessage = () => {
             photoUrl: data.photoUrl || null,
           });
           receiveMessage(message);
-          console.log("Added Conversation with its message");
         } else {
           receiveMessage(message);
-          console.log("Added message to existing conversation");
         }
       } catch (error) {
         console.log("error occurred in useReceiveMessage", error);
@@ -48,4 +54,11 @@ export const useReceiveMessage = () => {
     Toast.error("Message failed to send" + clientId);
   }, []);
   useSignalRListener("OnMessageFailure", onMessageFailure);
+  const onMessageDelivered = useCallback(
+    (message: DeliveredMessagePayload) => {
+      deliveredMessage(message);
+    },
+    [deliveredMessage]
+  );
+  useSignalRListener("OnMessageDelivered", onMessageDelivered);
 };

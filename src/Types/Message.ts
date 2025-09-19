@@ -44,7 +44,13 @@ export type ReceivedMessagePayload = {
   replyToMessageId?: string;
   createdAt: string;
 };
-
+export type DeliveredMessagePayload = {
+  id: string;
+  conversationId: string;
+  clientId: string;
+  createdAt: string;
+  status: MessageStatus.Delivered;
+};
 export type MediaItem = {
   type: MediaType;
   url: string;
