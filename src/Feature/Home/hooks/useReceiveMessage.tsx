@@ -2,7 +2,7 @@ import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useSignalRListener } from "@/src/Hooks/useSignalRListener";
 import { useChatStore } from "@/src/Store/chatStore";
 import { UserContact } from "@/src/Types/contacts";
-import { MessageStatus, ReceivedMessagePayload } from "@/src/Types/message";
+import { ReceivedMessagePayload } from "@/src/Types/message";
 import { HubResponse } from "@/src/Types/shared";
 import { useCallback } from "react";
 import { Toast } from "toastify-react-native";
@@ -25,13 +25,13 @@ export const useReceiveMessage = () => {
           addConversation({
             id: data.conversationId,
             lastMessage: message,
-            messages: [{ ...message, status: MessageStatus.Read }],
             participants: [data],
             unreadCount: 0,
             status: data.status,
             name: data.name,
             photoUrl: data.photoUrl || null,
           });
+          receiveMessage(message);
           console.log("Added Conversation with its message");
         } else {
           receiveMessage(message);

@@ -25,10 +25,9 @@ export const useFetchConversations = () => {
   useEffect(() => {
     if (!isLoading) {
       chats?.forEach((chat) => {
-        const conversation: Conversation = {
+        const conversation: Omit<Conversation, "messages"> = {
           id: chat.conversationId,
           lastMessage: chat.lastMessage,
-          messages: [],
           participants: [],
           unreadCount: chat.unreadCount,
           status: chat.status,

@@ -42,36 +42,29 @@ const Chating = () => {
   const onSend = useCallback(
     async (messages: IMessage[] = []) => {
       GiftedChat.append(storedMessages, messages);
-
+      const messageToSend: SendMessageRequest = {
+        clientId: Crypto.randomUUID(),
+        senderId: currentUserId!,
+        text: messages[0].text,
+        media: [],
+        conversationId: ui.currentChatId,
+      };
+      const messageToStore: AddMessageLocally = {
+        conversationId: messageToSend.conversationId!,
+        senderId: messageToSend.senderId,
+        clientId: messageToSend.clientId,
+        media: messageToSend.media as unknown as MediaItem[],
+        replyToMessageId: messageToSend.replyToMessageId,
+        text: messageToSend.text,
+        status: MessageStatus.Pending,
+        createdAt: new Date().toISOString(),
+      };
+      addPendingMessage(messageToStore);
       try {
         if (ui.isFirstTime === false) {
-          const messageToSend: SendMessageRequest = {
-            clientId: Crypto.randomUUID(),
-            senderId: currentUserId!,
-            text: messages[0].text,
-            media: [],
-            conversationId: ui.currentChatId,
-          };
           await invoke<SendMessageRequest>("sendMessage", messageToSend);
-          const messageToStore: AddMessageLocally = {
-            conversationId: messageToSend.conversationId!,
-            senderId: messageToSend.senderId,
-            clientId: messageToSend.clientId,
-            media: messageToSend.media as unknown as MediaItem[],
-            replyToMessageId: messageToSend.replyToMessageId,
-            text: messageToSend.text,
-            status: MessageStatus.Pending,
-            createdAt: new Date().toISOString(),
-          };
-          addPendingMessage(messageToStore);
         } else {
-          const messageToSend: SendMessageRequest = {
-            clientId: Crypto.randomUUID(),
-            senderId: currentUserId!,
-            text: messages[0].text,
-            media: [],
-            receiverId: ui.currentChatId,
-          };
+          messageToSend.receiverId = ui.currentChatId;
           await invoke<SendMessageRequest>("sendMessage", messageToSend);
         }
       } catch (error) {
