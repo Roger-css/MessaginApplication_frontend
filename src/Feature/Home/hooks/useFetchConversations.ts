@@ -1,14 +1,14 @@
 import { useAxiosAuth } from "@/src/Hooks/useAuthenticatedInstance";
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
-import { Conversation, useChatStore } from "@/src/Store/chatStore";
+import { Conversation, useChatStoreDb } from "@/src/Store/chatStoreDb";
 import { UserContact } from "@/src/Types/contacts";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useEffect } from "react";
 
 export const useFetchConversations = () => {
-  const { conversations, addConversation } = useChatStore();
-
+  const { addConversation: addDbConversation, cachedConversations } =
+    useChatStoreDb();
   const axios = useAxiosAuth();
   const id = useGetCurrentUserId();
   const {
@@ -25,22 +25,22 @@ export const useFetchConversations = () => {
   useEffect(() => {
     if (!isLoading) {
       chats?.forEach((chat) => {
-        const conversation: Omit<Conversation, "messages"> = {
+        const conversation: Omit<Conversation, "messages" | "participants"> = {
           id: chat.conversationId,
           lastMessage: chat.lastMessage,
-          participants: [],
           unreadCount: chat.unreadCount,
           status: chat.status,
           name: chat.name,
           photoUrl: chat.photoUrl || null,
         };
-        addConversation(conversation);
+        console.log("Added db conversation");
+        addDbConversation(conversation);
       });
     }
-  }, [addConversation, chats, isLoading]);
+  }, [, addDbConversation, chats, isLoading]);
 
   return {
-    conversations: Object.values(conversations),
+    conversations: Object.values(cachedConversations),
     isLoading,
     refetch,
     isFetching,

@@ -1,6 +1,6 @@
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useSignalRListener } from "@/src/Hooks/useSignalRListener";
-import { useChatStore } from "@/src/Store/chatStore";
+import { useChatStoreDb } from "@/src/Store/chatStoreDb";
 import { UserContact } from "@/src/Types/contacts";
 import {
   DeliveredMessagePayload,
@@ -10,13 +10,13 @@ import { HubResponse } from "@/src/Types/shared";
 import { useCallback } from "react";
 import { Toast } from "toastify-react-native";
 
-export const useReceiveMessage = () => {
+export const useReceiveMessageUpdates = () => {
   const {
     receiveMessage,
     conversationExist,
     addConversation,
     deliveredMessage,
-  } = useChatStore();
+  } = useChatStoreDb();
   const { invoke } = useSignalRInvoke();
 
   const handleIncomingMessage = useCallback(
@@ -33,7 +33,6 @@ export const useReceiveMessage = () => {
           addConversation({
             id: data.conversationId,
             lastMessage: message,
-            participants: [data],
             unreadCount: 0,
             status: data.status,
             name: data.name,
@@ -56,7 +55,7 @@ export const useReceiveMessage = () => {
   useSignalRListener("OnMessageFailure", onMessageFailure);
   const onMessageDelivered = useCallback(
     (message: DeliveredMessagePayload) => {
-      deliveredMessage(message);
+      deliveredMessage({ ...message });
     },
     [deliveredMessage]
   );

@@ -18,8 +18,7 @@ export type BaseMessage = {
 export type AddMessageLocally = BaseMessage & {
   id?: string;
   conversationId: string;
-  status: MessageStatus.Pending;
-  clientId?: string;
+  clientId: string;
 };
 
 export type PendingMessage = BaseMessage & {
@@ -31,7 +30,7 @@ export type Message = BaseMessage & {
   id?: string;
   conversationId: string;
   status: MessageStatus;
-  clientId?: string;
+  clientId: string;
 };
 
 export type ReceivedMessagePayload = {
@@ -49,7 +48,6 @@ export type DeliveredMessagePayload = {
   conversationId: string;
   clientId: string;
   createdAt: string;
-  status: MessageStatus.Delivered;
 };
 export type MediaItem = {
   type: MediaType;

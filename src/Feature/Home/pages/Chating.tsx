@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
-import { useChatStore } from "@/src/Store/chatStore";
+import { useChatStoreDb } from "@/src/Store/chatStoreDb";
 import {
   AddMessageLocally,
   MediaItem,
-  MessageStatus,
   SendMessageRequest,
 } from "@/src/Types/message";
 import * as Crypto from "expo-crypto";
@@ -15,18 +14,16 @@ import { Keyboard } from "react-native";
 import { GiftedChat, IMessage, InputToolbar } from "react-native-gifted-chat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, TextArea, View } from "tamagui";
-import { useGetStoredMessages } from "../hooks/useGetStoredMessages";
+import { useConversationMessages } from "../hooks/useGetStoredMessages";
 
 const Chating = () => {
-  const { ui, addPendingMessage } = useChatStore();
+  const { addPendingMessage: addPendingMessageDb, ui } = useChatStoreDb();
+  const dbMessages = useConversationMessages(ui.currentChatId!);
   if (!ui.currentChatId) throw new Error("No chat id found");
   const currentUserId = useGetCurrentUserId();
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
-  const storedMessages = useGetStoredMessages(ui.currentChatId);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  console.log("Chating stored messages: ", storedMessages);
-
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
       setKeyboardVisible(true)
@@ -41,7 +38,6 @@ const Chating = () => {
   }, []);
   const onSend = useCallback(
     async (messages: IMessage[] = []) => {
-      GiftedChat.append(storedMessages, messages);
       const messageToSend: SendMessageRequest = {
         clientId: Crypto.randomUUID(),
         senderId: currentUserId!,
@@ -56,15 +52,15 @@ const Chating = () => {
         media: messageToSend.media as unknown as MediaItem[],
         replyToMessageId: messageToSend.replyToMessageId,
         text: messageToSend.text,
-        status: MessageStatus.Pending,
         createdAt: new Date().toISOString(),
       };
-      addPendingMessage(messageToStore);
       try {
         if (ui.isFirstTime === false) {
+          addPendingMessageDb(messageToStore);
           await invoke<SendMessageRequest>("sendMessage", messageToSend);
         } else {
           messageToSend.receiverId = ui.currentChatId;
+          messageToSend.conversationId = undefined;
           await invoke<SendMessageRequest>("sendMessage", messageToSend);
         }
       } catch (error) {
@@ -72,12 +68,11 @@ const Chating = () => {
       }
     },
     [
-      storedMessages,
-      ui.isFirstTime,
-      ui.currentChatId,
       currentUserId,
+      ui.currentChatId,
+      ui.isFirstTime,
+      addPendingMessageDb,
       invoke,
-      addPendingMessage,
     ]
   );
 
@@ -89,13 +84,14 @@ const Chating = () => {
           ? Keyboard.metrics()?.height! + insets.bottom + 5
           : insets.bottom
       }
+      pt={insets.top}
       bg={"$black2"}
     >
       <GiftedChat
-        messages={storedMessages}
+        messages={dbMessages}
         onSend={(messages) => onSend(messages)}
         user={{
-          _id: 1,
+          _id: currentUserId || 1,
           name: "User",
         }}
         showAvatarForEveryMessage={false}

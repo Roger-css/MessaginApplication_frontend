@@ -8,6 +8,16 @@ export type CreateProfileRequest = {
   bio?: string;
   picture?: File;
 };
+export type UserInfo = {
+  id: string;
+  number?: string; // ? For Testing
+  name: string;
+  userName?: string;
+  bio?: string;
+  picture?: File;
+  lastSeen: Date;
+  status: UserStatus;
+};
 export enum UserStatus {
   Online = "Online",
   Offline = "Offline",

@@ -1,4 +1,4 @@
-import { Conversation, useChatStore } from "@/src/Store/chatStore";
+import { Conversation, useChatStoreDb } from "@/src/Store/chatStoreDb";
 import { router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -64,7 +64,7 @@ const Contact = ({ props, url, firstTime }: ContactProps) => {
       transform: [{ translateX: `${-50}%` }],
     };
   });
-  const setActiveConversation = useChatStore(
+  const setActiveConversation = useChatStoreDb(
     (state) => state.setActiveConversation
   );
   const onPress = async () => {
@@ -111,18 +111,35 @@ const Contact = ({ props, url, firstTime }: ContactProps) => {
           </Text>
         </YStack>
 
-        <View
+        <YStack
           height="100%"
           flex={0}
           shrink={0}
           justify="flex-start"
-          items="flex-start"
+          items="flex-end"
+          gap="$3"
         >
           <Text color="$black10" fontSize={10} numberOfLines={1}>
             {props.lastMessage?.createdAt &&
               FormatChatDate(props.lastMessage?.createdAt)}
           </Text>
-        </View>
+          {props.unreadCount > 0 ? (
+            <View
+              width={25}
+              height={25}
+              flex={1}
+              justify={"center"}
+              items="center"
+              rounded={100}
+              bg={"$green5"}
+              p="$2"
+            >
+              <Text fontSize={10} color={"white"}>
+                {props.unreadCount}
+              </Text>
+            </View>
+          ) : null}
+        </YStack>
       </XStack>
     </GestureDetector>
   );

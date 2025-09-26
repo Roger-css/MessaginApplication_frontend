@@ -4,9 +4,9 @@ import { Text, View } from "tamagui";
 const NotFoundScreen = () => {
   return (
     <>
-      <Stack.Screen options={{ title: "Oops! This screen doesn't exist." }} />
+      <Stack.Screen options={{ title: "Oops! An error occurred" }} />
       <View style={styles.container}>
-        <Link href="/(home)/Index" asChild>
+        <Link href="/(home)/(tabs)/Index" asChild>
           <Text>Go to home screen</Text>
         </Link>
       </View>

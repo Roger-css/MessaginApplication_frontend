@@ -2,11 +2,11 @@ import { HubConnectionState } from "@microsoft/signalr";
 import * as Network from "expo-network";
 import { useEffect } from "react";
 
-import { useReceiveMessage } from "../Feature/Home/hooks/useReceiveMessage";
+import { useReceiveMessageUpdates } from "../Feature/Home/hooks/useReceiveMessageUpdates";
 import { useSignalR } from "../Hooks/useSignalR";
 export const useSignalRWrapper = () => {
   const { connectionState, reconnect } = useSignalR();
-  useReceiveMessage();
+  useReceiveMessageUpdates();
 
   useEffect(() => {
     let reconnectInterval: number;
