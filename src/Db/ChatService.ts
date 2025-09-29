@@ -204,6 +204,7 @@ export class ChatService {
 
     try {
       const insertData: InsertMessage = {
+        id: messageData.id || null,
         clientId: messageData.clientId!,
         conversationId: messageData.conversationId,
         senderId: messageData.senderId,

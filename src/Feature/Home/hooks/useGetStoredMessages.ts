@@ -19,7 +19,7 @@ export const useConversationMessages = (conversationId: string) => {
     () =>
       messagesData
         ? messagesData
-            .map((message) => {
+            .map<IMessage>((message) => {
               const id = (message.id || message.clientId) as string;
               if (!id) throw new Error("Message id is undefined");
 
@@ -41,6 +41,5 @@ export const useConversationMessages = (conversationId: string) => {
         : [],
     [messagesData]
   );
-
   return transformedMessages;
 };

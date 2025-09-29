@@ -45,6 +45,9 @@ type ChatActions = {
   addPendingMessage: (message: AddMessageLocally) => Promise<void>;
   receiveMessage: (message: ReceivedMessagePayload) => Promise<void>;
   deliveredMessage: (props: DeliveredMessagePayload) => Promise<void>;
+  deliveredMessageToOtherParty: (
+    props: DeliveredMessagePayload
+  ) => Promise<void>;
   markMessagesAsRead: (conversationId: string) => Promise<void>;
   searchMessages: (
     query: string,
@@ -185,13 +188,40 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
     }
   },
 
-  deliveredMessage: async (messageUpdate) => {
+  deliveredMessageToOtherParty: async (messageUpdate) => {
     try {
       const message = { ...messageUpdate, status: MessageStatus.Delivered };
       if (messageUpdate.clientId) {
         await ChatService.updateMessage(messageUpdate.clientId, {
-          id: messageUpdate.id,
           status: MessageStatus.Delivered,
+        });
+      }
+      // Update cached conversation
+      const state = get();
+      const conversation =
+        state.cachedConversations[messageUpdate.conversationId];
+      if (conversation) {
+        const updatedMessages = conversation.messages.map((msg) =>
+          msg.clientId === message.clientId
+            ? { ...msg, status: MessageStatus.Delivered }
+            : msg
+        );
+        get().updateConversationCache(messageUpdate.conversationId, {
+          messages: updatedMessages,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update delivered message:", error);
+      throw error;
+    }
+  },
+  deliveredMessage: async (messageUpdate) => {
+    try {
+      const message = { ...messageUpdate, status: MessageStatus.Sent };
+      if (messageUpdate.clientId) {
+        await ChatService.updateMessage(messageUpdate.clientId, {
+          id: messageUpdate.messageId,
+          status: MessageStatus.Sent,
           createdAt: messageUpdate.createdAt,
         });
       }
@@ -212,7 +242,6 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
       throw error;
     }
   },
-
   receiveMessage: async (messageData) => {
     try {
       const message: Message = {
@@ -319,7 +348,11 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
       });
 
       // Update cached conversation
-      get().updateConversationCache(conversation.id, conversation);
+      get().updateConversationCache(conversation.id, {
+        ...conversation,
+        messages: [],
+        participants: [],
+      });
     } catch (error) {
       console.error("Failed to add conversation:", error);
       throw error;

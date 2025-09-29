@@ -44,7 +44,7 @@ export type ReceivedMessagePayload = {
   createdAt: string;
 };
 export type DeliveredMessagePayload = {
-  id: string;
+  messageId: string;
   conversationId: string;
   clientId: string;
   createdAt: string;
@@ -52,6 +52,10 @@ export type DeliveredMessagePayload = {
 export type ReadMessagePayload = {
   conversationId: string;
   userId: string;
+};
+export type MessageReceivedRequest = {
+  conversationId: string;
+  messageId: string;
 };
 export type MediaItem = {
   type: MediaType;

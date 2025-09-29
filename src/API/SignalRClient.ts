@@ -110,7 +110,7 @@ class SignalRService {
         timeout: Infinity, //! Testing
       })
       .withAutomaticReconnect()
-      .configureLogging(LogLevel.Information)
+      .configureLogging(LogLevel.None)
       .build();
 
     // Set up connection state handlers

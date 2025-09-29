@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
-import { useRunOnMount } from "@/src/Hooks/useRunOnMount";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useChatStoreDb } from "@/src/Store/chatStoreDb";
 import {
@@ -38,7 +37,7 @@ const Chating = () => {
       console.log(error);
     }
   };
-  useRunOnMount(markAsRead);
+  //useRunOnMount(markAsRead);
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
       setKeyboardVisible(true)
