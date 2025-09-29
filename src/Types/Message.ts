@@ -49,6 +49,10 @@ export type DeliveredMessagePayload = {
   clientId: string;
   createdAt: string;
 };
+export type ReadMessagePayload = {
+  conversationId: string;
+  userId: string;
+};
 export type MediaItem = {
   type: MediaType;
   url: string;

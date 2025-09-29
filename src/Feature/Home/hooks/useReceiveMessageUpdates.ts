@@ -1,9 +1,11 @@
+import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useSignalRListener } from "@/src/Hooks/useSignalRListener";
 import { useChatStoreDb } from "@/src/Store/chatStoreDb";
 import { UserContact } from "@/src/Types/contacts";
 import {
   DeliveredMessagePayload,
+  ReadMessagePayload,
   ReceivedMessagePayload,
 } from "@/src/Types/message";
 import { HubResponse } from "@/src/Types/shared";
@@ -16,9 +18,10 @@ export const useReceiveMessageUpdates = () => {
     conversationExist,
     addConversation,
     deliveredMessage,
+    markMessagesAsRead,
   } = useChatStoreDb();
   const { invoke } = useSignalRInvoke();
-
+  const currentUserId = useGetCurrentUserId();
   const handleIncomingMessage = useCallback(
     async function (message: ReceivedMessagePayload) {
       try {
@@ -42,22 +45,45 @@ export const useReceiveMessageUpdates = () => {
         } else {
           receiveMessage(message);
         }
+        await invoke<ReadMessagePayload>("MarkMessagesAsDelivered", {
+          conversationId: message.conversationId,
+          userId: currentUserId!,
+        });
       } catch (error) {
         console.log("error occurred in useReceiveMessage", error);
       }
     },
-    [addConversation, conversationExist, invoke, receiveMessage]
+    [addConversation, conversationExist, currentUserId, invoke, receiveMessage]
   );
   useSignalRListener("OnMessageReceive", handleIncomingMessage);
+
   const onMessageFailure = useCallback(function (clientId: string) {
     Toast.error("Message failed to send" + clientId);
   }, []);
   useSignalRListener("OnMessageFailure", onMessageFailure);
-  const onMessageDelivered = useCallback(
+
+  const onMessageDeliveredInServer = useCallback(
     (message: DeliveredMessagePayload) => {
       deliveredMessage({ ...message });
     },
     [deliveredMessage]
   );
-  useSignalRListener("OnMessageDelivered", onMessageDelivered);
+  useSignalRListener("OnMessageDeliveredInServer", onMessageDeliveredInServer);
+  const onMessageDeliveredToOtherParty = useCallback(
+    (message: DeliveredMessagePayload) => {
+      deliveredMessage({ ...message });
+    },
+    [deliveredMessage]
+  );
+  useSignalRListener(
+    "OnMessageDeliveredInDevice",
+    onMessageDeliveredToOtherParty
+  );
+  const onMessageRead = useCallback(
+    (message: ReadMessagePayload) => {
+      markMessagesAsRead(message.conversationId);
+    },
+    [markMessagesAsRead]
+  );
+  useSignalRListener("OnMessageRead", onMessageRead);
 };

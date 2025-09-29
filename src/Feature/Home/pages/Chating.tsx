@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
+import { useRunOnMount } from "@/src/Hooks/useRunOnMount";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useChatStoreDb } from "@/src/Store/chatStoreDb";
 import {
   AddMessageLocally,
   MediaItem,
+  ReadMessagePayload,
   SendMessageRequest,
 } from "@/src/Types/message";
 import * as Crypto from "expo-crypto";
@@ -19,11 +21,24 @@ import { useConversationMessages } from "../hooks/useGetStoredMessages";
 const Chating = () => {
   const { addPendingMessage: addPendingMessageDb, ui } = useChatStoreDb();
   const dbMessages = useConversationMessages(ui.currentChatId!);
+
   if (!ui.currentChatId) throw new Error("No chat id found");
   const currentUserId = useGetCurrentUserId();
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const markAsRead = async () => {
+    if (ui.isFirstTime) return;
+    try {
+      await invoke<ReadMessagePayload>("MarkMessagesAsRead", {
+        conversationId: ui.currentChatId!,
+        userId: currentUserId!,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useRunOnMount(markAsRead);
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
       setKeyboardVisible(true)

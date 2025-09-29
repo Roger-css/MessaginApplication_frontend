@@ -222,7 +222,7 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
         text: messageData.text,
         media: messageData.media,
         replyToMessageId: messageData.replyToMessageId,
-        status: MessageStatus.Read,
+        status: MessageStatus.Delivered,
         clientId: messageData.id!,
         createdAt: messageData.createdAt,
       };
