@@ -9,7 +9,7 @@ import { setDbConnection } from "../Db/ChatService";
 import GeneralLoader from "./GeneralLoader";
 
 const DatabaseSetup = ({ children }: { children: ReactNode }) => {
-  const loadConversations = useChatStoreDb((state) => state.loadConversations);
+  const { loadConversations } = useChatStoreDb((state) => state);
   const expoDb = useSQLiteContext();
   const db = drizzle(expoDb);
   const { success, error } = useMigrations(db, migrations);

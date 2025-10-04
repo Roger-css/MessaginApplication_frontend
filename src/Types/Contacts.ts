@@ -12,7 +12,7 @@ export type LastMessage = {
 export type UserContact = {
   conversationId: string;
   name: string;
-  photoUrl?: string;
+  photoUrl: string | null;
   unreadCount: number;
   lastMessage?: LastMessage;
   status: UserStatus;
@@ -23,5 +23,5 @@ export type UnInitializedContact = {
   photoUrl?: string;
   unreadCount: number;
   lastMessage?: LastMessage;
-  status: string;
+  status: UserStatus;
 };

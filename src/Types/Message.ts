@@ -51,7 +51,13 @@ export type DeliveredMessagePayload = {
 };
 export type ReadMessagePayload = {
   conversationId: string;
-  userId: string;
+  messageId: string;
+}[];
+export type MessageReadRequest = {
+  messages: {
+    conversationId: string;
+    messageId: string;
+  }[];
 };
 export type MessageReceivedRequest = {
   conversationId: string;

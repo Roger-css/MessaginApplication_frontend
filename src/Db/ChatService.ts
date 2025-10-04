@@ -20,6 +20,8 @@ export const setDbConnection = (dbConnection: ReturnType<typeof drizzle>) => {
 export class ChatService {
   // User operations
   static async upsertUser(userData: UserInfo): Promise<void> {
+    if (db === null) throw new Error("db not initialized");
+
     const insertData: InsertUser = {
       id: userData.id,
       number: userData.number || null,
@@ -32,7 +34,7 @@ export class ChatService {
     };
 
     await db
-      ?.insert(users)
+      .insert(users)
       .values(insertData)
       .onConflictDoUpdate({
         target: users.id,
@@ -132,15 +134,18 @@ export class ChatService {
         .where(eq(messages.conversationId, conv.id))
         .orderBy(desc(messages.createdAt))
         .limit(1);
-      const lastMessage: LastMessage = {
-        createdAt: lastMessageInConversation[0].createdAt,
-        senderId: lastMessageInConversation[0].senderId,
-        text: lastMessageInConversation[0].text ?? undefined,
-        type:
-          lastMessageInConversation[0].text !== null
-            ? MessageType.Text
-            : MessageType.Media,
-      };
+      let lastMessage: LastMessage | undefined = undefined;
+      if (lastMessageInConversation.length > 0) {
+        lastMessage = {
+          createdAt: lastMessageInConversation[0].createdAt,
+          senderId: lastMessageInConversation[0].senderId,
+          text: lastMessageInConversation[0].text ?? undefined,
+          type:
+            lastMessageInConversation[0].text !== null
+              ? MessageType.Text
+              : MessageType.Media,
+        };
+      }
       const convToBePushed: Conversation = {
         ...conv,
         lastMessage: lastMessage,
@@ -313,20 +318,44 @@ export class ChatService {
       .where(eq(conversations.id, conversationId));
   }
 
-  static async markMessagesAsRead(conversationId: string): Promise<void> {
+  static async markMessagesAsRead(
+    payload: { messageId: string; conversationId: string }[]
+  ): Promise<void> {
     if (db === null) throw new Error("db not initialized");
-
-    // Mark messages from others as read for this user
-    await db
-      .update(messages)
-      .set({ status: MessageStatus.Read })
-      .where(
-        and(
-          eq(messages.conversationId, conversationId),
-          eq(messages.status, MessageStatus.Delivered)
-        )
-      );
-
+    const { conversationId } = payload[0];
+    const messageIds = payload.map((p) => p.messageId);
+    if (messageIds.length > 1) {
+      db.transaction(async (e) => {
+        try {
+          await e
+            .update(messages)
+            .set({ status: MessageStatus.Read })
+            .where(
+              and(
+                eq(messages.conversationId, conversationId),
+                inArray(messages.id, messageIds)
+              )
+            );
+        } catch (error) {
+          console.log("Error marking messages as read (transaction):", error);
+          e.rollback();
+        }
+      });
+    } else {
+      try {
+        await db
+          .update(messages)
+          .set({ status: MessageStatus.Read })
+          .where(
+            and(
+              eq(messages.conversationId, conversationId),
+              inArray(messages.id, messageIds)
+            )
+          );
+      } catch (error) {
+        console.log("Error marking messages as read:", error);
+      }
+    }
     await ChatService.updateUnreadCount(conversationId, 0);
   }
 

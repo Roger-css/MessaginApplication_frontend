@@ -11,33 +11,36 @@ export const useConversationMessages = (conversationId: string) => {
     };
     load();
   }, [conversationId, loadMessages]);
+
   const messagesData = useMemo(
     () => cachedConversations[conversationId]?.messages,
     [cachedConversations, conversationId]
   );
-  const transformedMessages: IMessage[] = useMemo(
+  const transformedMessages: (IMessage & { seen?: boolean })[] = useMemo(
     () =>
       messagesData
         ? messagesData
-            .map<IMessage>((message) => {
+            .map<IMessage & { seen?: boolean }>((message) => {
               const id = (message.id || message.clientId) as string;
               if (!id) throw new Error("Message id is undefined");
-
               return {
                 _id: id,
                 text: message.text || "",
                 createdAt: new Date(message.createdAt),
                 pending: message.status === MessageStatus.Pending,
-                sent: message.status === MessageStatus.Sent,
-                received:
-                  message.status === MessageStatus.Delivered ||
-                  message.status === MessageStatus.Read,
+                sent: message.status > MessageStatus.Pending,
+                received: message.status > MessageStatus.Sent,
+                seen: message.status === MessageStatus.Read,
                 user: {
                   _id: message.senderId,
                 },
               };
             })
-            .reverse()
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            )
         : [],
     [messagesData]
   );

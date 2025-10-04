@@ -51,7 +51,7 @@ const SearchPage = () => {
             renderItem={({ item }) => {
               return <Contact props={item} url={item.userId} firstTime />;
             }}
-            keyExtractor={(e) => e.name}
+            keyExtractor={(e) => e.userId}
             data={data}
             estimatedItemSize={134}
             showsVerticalScrollIndicator={false}

@@ -1,4 +1,5 @@
-import { Conversation, useChatStoreDb } from "@/src/Store/chatStoreDb";
+import { useChatStoreDb } from "@/src/Store/chatStoreDb";
+import { UserContact } from "@/src/Types/contacts";
 import { router } from "expo-router";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -11,7 +12,7 @@ import Animated, {
 import { Avatar, Text, View, XStack, YStack } from "tamagui";
 import { FormatChatDate } from "../utils/DateHumanizer";
 type ContactProps = {
-  props: Conversation;
+  props: Omit<UserContact, "conversationId">;
   url: string;
   firstTime: boolean;
 };

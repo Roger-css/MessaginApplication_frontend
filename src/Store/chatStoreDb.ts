@@ -4,13 +4,11 @@ import {
   Message,
   MessageStatus,
   MessageType,
+  ReadMessagePayload,
   ReceivedMessagePayload,
 } from "@/src/Types/message";
-import { and, desc, eq, sql } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { create } from "zustand";
-import { ChatService, db } from "../Db/ChatService";
-import { conversations, messages } from "../Db/Schema/V1";
+import { ChatService } from "../Db/ChatService";
 import { LastMessage } from "../Types/contacts";
 import { UserInfo, UserStatus } from "../Types/user";
 
@@ -48,7 +46,7 @@ type ChatActions = {
   deliveredMessageToOtherParty: (
     props: DeliveredMessagePayload
   ) => Promise<void>;
-  markMessagesAsRead: (conversationId: string) => Promise<void>;
+  markMessagesAsRead: (props: ReadMessagePayload) => Promise<void>;
   searchMessages: (
     query: string,
     conversationId?: string
@@ -67,8 +65,11 @@ type ChatActions = {
   ) => Promise<void>;
 
   // UI operations
-  setActiveConversation: (state: UIState) => void;
-
+  setActiveConversation: (state: {
+    currentChatId: string;
+    isFirstTime: boolean;
+  }) => void;
+  removeActiveConversation: () => void;
   // User operations
   updateUser: (user: UserInfo) => Promise<void>;
   getUser: (userId: string) => Promise<UserInfo | null>;
@@ -125,7 +126,9 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
         limit,
         offset
       );
-      const messages: Message[] = dbMessages.reverse(); // Reverse to show chronological order
+      console.log("loadMessages", dbMessages);
+
+      const messages: Message[] = dbMessages;
 
       set((state) => {
         const conversation = state.cachedConversations[conversationId];
@@ -262,7 +265,14 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
       // Update unread count
       const state = get();
       const currentConv = state.cachedConversations[messageData.conversationId];
-      const newUnreadCount = (currentConv?.unreadCount || 0) + 1;
+      let newUnreadCount = (currentConv?.unreadCount || 0) + 1;
+      if (get().ui.currentChatId === messageData.conversationId) {
+        console.log(
+          "Current chat id is same as message id",
+          get().ui.currentChatId
+        );
+        newUnreadCount = 0;
+      }
       await ChatService.updateUnreadCount(
         messageData.conversationId,
         newUnreadCount
@@ -295,23 +305,29 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
     }
   },
 
-  markMessagesAsRead: async (conversationId: string) => {
+  markMessagesAsRead: async (messages) => {
     try {
-      await ChatService.markMessagesAsRead(conversationId);
+      await ChatService.markMessagesAsRead(messages);
       // Update cached conversation
+      const conversationId = messages[0].conversationId;
       const state = get();
       const conversation = state.cachedConversations[conversationId];
       if (conversation) {
-        const updatedMessages = conversation.messages.map((msg) => ({
-          ...msg,
-          status:
-            msg.status === MessageStatus.Delivered
-              ? MessageStatus.Read
-              : msg.status,
-        }));
-
+        await get().loadMessages(conversation.id);
+        const updatedMessages =
+          get().cachedConversations[conversationId].messages;
+        const newMessagesRecord: Record<string, ReadMessagePayload[number]> =
+          {};
+        for (const message of messages) {
+          newMessagesRecord[message.messageId] = message;
+        }
+        updatedMessages.map((message) => {
+          if (message.id && newMessagesRecord[message.id] !== undefined) {
+            message.status = MessageStatus.Read;
+          }
+          return message;
+        });
         get().updateConversationCache(conversationId, {
-          unreadCount: 0,
           messages: updatedMessages,
         });
       }
@@ -425,20 +441,23 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
     }
   },
 
-  setActiveConversation: (uiState) => {
+  setActiveConversation: async (uiState) => {
+    console.log("setting active conversation to id: ", uiState.currentChatId);
     set({ ui: uiState });
-
-    // Mark messages as read when opening a conversation
-    if (uiState.currentChatId) {
-      const state = get();
-      const conversation = state.cachedConversations[uiState.currentChatId];
-      if (conversation && conversation.unreadCount > 0) {
-        // You'll need to pass the current user ID here
-        get().markMessagesAsRead(uiState.currentChatId);
-      }
+    if (!uiState.isFirstTime) {
+      await ChatService.updateUnreadCount(uiState.currentChatId!, 0);
+      get().updateConversationCache(uiState.currentChatId!, { unreadCount: 0 });
     }
   },
-
+  removeActiveConversation: () => {
+    console.log("removing active conversation");
+    set({
+      ui: {
+        currentChatId: undefined,
+        isFirstTime: false,
+      },
+    });
+  },
   clearAllData: async () => {
     try {
       await ChatService.clearAllData();
@@ -456,131 +475,3 @@ export const useChatStoreDb = create<ChatState & ChatActions>()((set, get) => ({
     }
   },
 }));
-
-// Hook for getting conversations with live updates (use sparingly)
-export const useConversationsLive = () => {
-  if (db === null) throw new Error("db not initialized");
-
-  const latestMessages = db
-    .select({
-      conversationId: messages.conversationId,
-      latestId: sql<string>`max(${messages.createdAt})`.as("latest_createdAt"),
-    })
-    .from(messages)
-    .groupBy(messages.conversationId)
-    .as("latest_messages");
-
-  // 2. Join conversations with the latest messages
-  const result = db
-    .select({
-      conversation: conversations,
-      lastMessage: messages,
-    })
-    .from(conversations)
-    .innerJoin(
-      latestMessages,
-      eq(conversations.id, latestMessages.conversationId)
-    )
-    .innerJoin(
-      messages,
-      and(
-        eq(messages.conversationId, latestMessages.conversationId),
-        eq(messages.createdAt, latestMessages.latestId)
-      )
-    )
-    .orderBy(desc(messages.createdAt));
-  const { data: conversationsData, error } = useLiveQuery(result);
-
-  return {
-    conversations: conversationsData || [],
-    isLoading: !conversationsData && !error,
-    error,
-  };
-};
-
-// Main hook for app-wide chat operations
-export const useChat = () => {
-  const store = useChatStoreDb();
-
-  const sendMessage = async (message: AddMessageLocally) => {
-    try {
-      await store.addPendingMessage(message);
-      // Here you would typically also send the message to your server
-      // Example: await chatAPI.sendMessage(message);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      throw error;
-    }
-  };
-
-  const createConversation = async (conversationData: Conversation) => {
-    try {
-      await store.addConversation(conversationData);
-      // Here you would typically also create the conversation on your server
-      // Example: await chatAPI.createConversation(conversationData);
-    } catch (error) {
-      console.error("Failed to create conversation:", error);
-      throw error;
-    }
-  };
-
-  const openConversation = async (conversationId: string) => {
-    try {
-      store.setActiveConversation({
-        currentChatId: conversationId,
-        isFirstTime: false,
-      });
-
-      // Load conversation if not in cache
-      if (!store.cachedConversations[conversationId]) {
-        await store.refreshConversation(conversationId);
-      }
-
-      // Load messages if not already loaded
-      const conversation = store.cachedConversations[conversationId];
-      if (conversation && conversation.messages.length === 0) {
-        await store.loadMessages(conversationId);
-      }
-    } catch (error) {
-      console.error(`Failed to open conversation ${conversationId}:`, error);
-      throw error;
-    }
-  };
-
-  const initializeChat = async () => {
-    try {
-      await store.loadConversations();
-    } catch (error) {
-      console.error("Failed to initialize chat:", error);
-      throw error;
-    }
-  };
-
-  return {
-    // State
-    conversations: store.cachedConversations,
-    users: store.cachedUsers,
-    currentChatId: store.ui.currentChatId,
-    isFirstTime: store.ui.isFirstTime,
-    isLoading: store.isLoading,
-
-    // Actions
-    sendMessage,
-    createConversation,
-    openConversation,
-    initializeChat,
-
-    // Direct store actions
-    receiveMessage: store.receiveMessage,
-    deliveredMessage: store.deliveredMessage,
-    updateUser: store.updateUser,
-    markMessagesAsRead: store.markMessagesAsRead,
-    clearAllData: store.clearAllData,
-    searchMessages: store.searchMessages,
-    loadConversations: store.loadConversations,
-
-    // Utilities
-    conversationExist: store.conversationExist,
-    getUser: store.getUser,
-  };
-};

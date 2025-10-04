@@ -1,43 +1,55 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useGetCurrentUserId } from "@/src/Hooks/useGetCurrentUserId";
+import { useRunOnMount } from "@/src/Hooks/useRunOnMount";
 import { useSignalRInvoke } from "@/src/Hooks/useSignalRInvoke";
 import { useChatStoreDb } from "@/src/Store/chatStoreDb";
 import {
   AddMessageLocally,
   MediaItem,
-  ReadMessagePayload,
+  MessageReadRequest,
   SendMessageRequest,
 } from "@/src/Types/message";
 import * as Crypto from "expo-crypto";
+import { useFocusEffect } from "expo-router";
 import { SendHorizonal } from "lucide-react-native";
 import { Keyboard } from "react-native";
 import { GiftedChat, IMessage, InputToolbar } from "react-native-gifted-chat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, TextArea, View } from "tamagui";
+import CustomBubble from "../components/CustomBubble";
 import { useConversationMessages } from "../hooks/useGetStoredMessages";
 
 const Chating = () => {
-  const { addPendingMessage: addPendingMessageDb, ui } = useChatStoreDb();
+  const { addPendingMessage, ui, removeActiveConversation } = useChatStoreDb();
   const dbMessages = useConversationMessages(ui.currentChatId!);
+  console.log("text: ", dbMessages[0]?.text);
+  console.log("seen: ", dbMessages[0]?.seen);
 
   if (!ui.currentChatId) throw new Error("No chat id found");
   const currentUserId = useGetCurrentUserId();
+
   const insets = useSafeAreaInsets();
   const { invoke } = useSignalRInvoke();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const markAsRead = async () => {
     if (ui.isFirstTime) return;
     try {
-      await invoke<ReadMessagePayload>("MarkMessagesAsRead", {
-        conversationId: ui.currentChatId!,
-        userId: currentUserId!,
+      const messages = dbMessages
+        .filter((e) => e.user._id !== currentUserId)
+        .map((message) => ({
+          conversationId: ui.currentChatId!,
+          messageId: message._id as string,
+        }));
+      if (messages.length === 0) return;
+      await invoke<MessageReadRequest>("MarkMessagesAsRead", {
+        messages: messages,
       });
     } catch (error) {
       console.log(error);
     }
   };
-  //useRunOnMount(markAsRead);
+  useRunOnMount(markAsRead);
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
       setKeyboardVisible(true)
@@ -70,7 +82,7 @@ const Chating = () => {
       };
       try {
         if (ui.isFirstTime === false) {
-          addPendingMessageDb(messageToStore);
+          addPendingMessage(messageToStore);
           await invoke<SendMessageRequest>("sendMessage", messageToSend);
         } else {
           messageToSend.receiverId = ui.currentChatId;
@@ -81,15 +93,13 @@ const Chating = () => {
         console.log(error);
       }
     },
-    [
-      currentUserId,
-      ui.currentChatId,
-      ui.isFirstTime,
-      addPendingMessageDb,
-      invoke,
-    ]
+    [currentUserId, ui.currentChatId, ui.isFirstTime, addPendingMessage, invoke]
   );
-
+  useFocusEffect(
+    useCallback(() => {
+      return removeActiveConversation;
+    }, [removeActiveConversation])
+  );
   return (
     <View
       flex={1}
@@ -153,6 +163,7 @@ const Chating = () => {
             borderWidth={2}
           />
         )}
+        renderBubble={(props) => <CustomBubble {...props} />}
       />
     </View>
   );
